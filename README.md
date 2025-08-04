@@ -530,7 +530,7 @@ robust_agent.learn(total_timesteps=50_000_000)
 ```bibtex
 @article{lunar_habitat_rl2025,
   title={Lunar-Habitat-RL-Suite: Benchmarking Autonomous Life Support Systems for Space Exploration},
-  author={Your Name et al.},
+  author={Daniel Schmidt},
   journal={Science Robotics},
   year={2025},
   doi={10.1126/scirobotics.XXXXX}
