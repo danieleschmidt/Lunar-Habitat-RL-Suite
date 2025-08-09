@@ -1,14 +1,21 @@
 """Baseline agents for comparison and benchmarking."""
 
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
 from typing import Dict, Any, Optional, Union, Tuple
 from abc import ABC, abstractmethod
 from collections import deque
 
+# Conditional torch import
+try:
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+    import torch.nn.functional as F
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+
+# Conditional stable_baselines3 import
 try:
     from stable_baselines3 import PPO, SAC
     from stable_baselines3.common.policies import ActorCriticPolicy, BasePolicy
@@ -436,21 +443,23 @@ class HeuristicAgent(BaseAgent):
         logger.info(f"Loaded heuristic agent from {filepath}")
 
 
-class ActorNetwork(nn.Module):
-    """Actor network for continuous action spaces."""
-    
-    def __init__(self, obs_dim: int, action_dim: int, hidden_size: int = 256):
-        super().__init__()
-        self.network = nn.Sequential(
-            nn.Linear(obs_dim, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, action_dim * 2)  # mean and log_std
-        )
-        self.action_dim = action_dim
-        self.max_log_std = 2.0
-        self.min_log_std = -20.0
+# Torch-based neural network classes (only available if torch is installed)
+if TORCH_AVAILABLE:
+    class ActorNetwork(nn.Module):
+        """Actor network for continuous action spaces."""
+        
+        def __init__(self, obs_dim: int, action_dim: int, hidden_size: int = 256):
+            super().__init__()
+            self.network = nn.Sequential(
+                nn.Linear(obs_dim, hidden_size),
+                nn.ReLU(),
+                nn.Linear(hidden_size, hidden_size),
+                nn.ReLU(),
+                nn.Linear(hidden_size, action_dim * 2)  # mean and log_std
+            )
+            self.action_dim = action_dim
+            self.max_log_std = 2.0
+            self.min_log_std = -20.0
     
     def forward(self, state: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         """Forward pass returning mean and log std."""

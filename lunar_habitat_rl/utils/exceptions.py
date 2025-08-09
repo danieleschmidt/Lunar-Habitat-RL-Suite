@@ -121,3 +121,18 @@ class ResourceError(LunarHabitatError):
             error_code="RESOURCE_ERROR",
             details=details
         )
+
+
+class EnvironmentError(LunarHabitatError):
+    """Raised when environment operations fail."""
+    
+    def __init__(self, message: str, environment_state: Optional[Dict[str, Any]] = None):
+        details = {}
+        if environment_state:
+            details['environment_state'] = environment_state
+            
+        super().__init__(
+            message=message,
+            error_code="ENVIRONMENT_ERROR",
+            details=details
+        )

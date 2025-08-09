@@ -4,7 +4,15 @@ from typing import Dict, Any, Optional, Union, List, Callable
 import numpy as np
 import gymnasium as gym
 from gymnasium.vector import VectorEnv, AsyncVectorEnv, SyncVectorEnv
-from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+
+try:
+    from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+    SB3_AVAILABLE = True
+except ImportError:
+    # Fallback vector environments when SB3 is not available
+    from gymnasium.vector import SyncVectorEnv as DummyVecEnv
+    from gymnasium.vector import AsyncVectorEnv as SubprocVecEnv
+    SB3_AVAILABLE = False
 
 from .habitat_base import LunarHabitatEnv
 from ..core import HabitatConfig

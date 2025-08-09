@@ -51,7 +51,7 @@ class PhysicsConfig(BaseModel):
 class ScenarioConfig(BaseModel):
     """Configuration for mission scenarios and events."""
     
-    name: str = Field(description="Scenario name")
+    name: str = Field(default="nominal_operations", description="Scenario name")
     duration_days: int = Field(default=30, ge=1, le=1000, description="Mission duration in days")
     difficulty: str = Field(default="nominal", description="Difficulty level")
     location: str = Field(default="lunar_south_pole", description="Mission location")
