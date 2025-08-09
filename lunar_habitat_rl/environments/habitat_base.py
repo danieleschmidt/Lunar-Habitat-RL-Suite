@@ -8,6 +8,8 @@ import logging
 
 from ..core import HabitatConfig, HabitatState, ActionSpace, MissionMetrics, PerformanceTracker
 from ..physics import ThermalSimulator, CFDSimulator, ChemistrySimulator
+from ..utils.validation import validate_numeric_range, validate_config, validate_action, validate_state
+from ..utils.exceptions import EnvironmentError, SafetyError, PhysicsError
 
 logger = logging.getLogger(__name__)
 
@@ -45,17 +47,36 @@ class LunarHabitatEnv(gym.Env):
         """
         super().__init__()
         
-        # Load configuration
-        if isinstance(config, str):
-            self.config = HabitatConfig.from_preset(config)
-        elif isinstance(config, HabitatConfig):
-            self.config = config
-        else:
-            self.config = HabitatConfig()
+        try:
+            # Validate input parameters
+            crew_size = int(validate_numeric_range(crew_size, 1, 12, "crew_size"))
+            if difficulty not in ["easy", "nominal", "hard", "extreme"]:
+                raise EnvironmentError(f"Invalid difficulty level: {difficulty}")
+            if reward_config not in ["survival_focused", "efficiency_focused", "exploration_focused", "balanced"]:
+                raise EnvironmentError(f"Invalid reward configuration: {reward_config}")
             
-        # Override config with provided parameters
-        self.config.crew.size = crew_size
-        self.config.scenario.difficulty = difficulty
+            # Load and validate configuration
+            if isinstance(config, str):
+                self.config = HabitatConfig.from_preset(config)
+            elif isinstance(config, HabitatConfig):
+                self.config = config
+            elif config is None:
+                self.config = HabitatConfig()
+            else:
+                raise EnvironmentError(f"Invalid configuration type: {type(config)}")
+            
+            # Validate configuration
+            self.config = validate_config(self.config)
+            
+            # Override config with validated parameters
+            self.config.crew.size = crew_size
+            self.config.scenario.difficulty = difficulty
+            
+        except Exception as e:
+            if isinstance(e, (EnvironmentError, SafetyError)):
+                raise
+            else:
+                raise EnvironmentError(f"Failed to initialize environment: {str(e)}") from e
         
         self.scenario = scenario
         self.reward_config = reward_config
