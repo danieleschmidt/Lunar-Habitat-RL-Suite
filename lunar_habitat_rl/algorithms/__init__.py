@@ -1,7 +1,10 @@
 """Reinforcement Learning algorithms for lunar habitat control."""
 
-# Import baseline agents (no torch dependency)
-from .baselines import RandomAgent, HeuristicAgent
+# Import baseline agents (force lightweight for Generation 1)
+# try:
+#     from .baselines import RandomAgent, HeuristicAgent
+# except ImportError:
+from .lightweight_baselines import RandomAgent, HeuristicAgent
 
 # Conditionally import torch-based agents
 __all__ = ["RandomAgent", "HeuristicAgent"]
