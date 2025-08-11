@@ -1,0 +1,650 @@
+# Advanced Monitoring Stack for Lunar Habitat RL
+# NASA-grade observability with mission-critical alerting
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    name: monitoring
+    mission: artemis
+
+---
+# Prometheus Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      external_labels:
+        mission: 'artemis_lunar_habitat'
+        location: 'lunar_south_pole'
+        
+    rule_files:
+      - "lunar_habitat_rules.yml"
+      
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+              - alertmanager:9093
+              
+    scrape_configs:
+      # Lunar Habitat RL Services
+      - job_name: 'causal-rl'
+        static_configs:
+          - targets: ['causal-rl-service.lunar-habitat-rl:8080']
+        metrics_path: /metrics
+        scrape_interval: 5s  # High frequency for safety-critical systems
+        
+      - job_name: 'hamiltonian-rl'
+        static_configs:
+          - targets: ['hamiltonian-rl-service.lunar-habitat-rl:8081']
+        metrics_path: /metrics
+        scrape_interval: 5s
+        
+      - job_name: 'meta-adaptation-rl'
+        static_configs:
+          - targets: ['meta-adaptation-service.lunar-habitat-rl:8082']
+        metrics_path: /metrics
+        scrape_interval: 5s
+        
+      # Kubernetes cluster metrics
+      - job_name: 'kubernetes-apiservers'
+        kubernetes_sd_configs:
+        - role: endpoints
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+        - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+          action: keep
+          regex: default;kubernetes;https
+          
+      # Node metrics
+      - job_name: 'kubernetes-nodes'
+        kubernetes_sd_configs:
+        - role: node
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+
+  lunar_habitat_rules.yml: |
+    groups:
+    - name: lunar_habitat_safety_critical
+      rules:
+      # Safety-critical alerts
+      - alert: CriticalSafetyViolation
+        expr: safety_violations_total > 5
+        for: 30s
+        labels:
+          severity: critical
+          mission_impact: crew_safety
+        annotations:
+          summary: "Critical safety violations detected in lunar habitat"
+          description: "Safety violations: {{ $value }} in the last 5 minutes"
+          
+      - alert: EnergyConservationViolation
+        expr: energy_conservation_rate < 0.95
+        for: 1m
+        labels:
+          severity: warning
+          mission_impact: system_integrity
+        annotations:
+          summary: "Energy conservation violations in Hamiltonian RL"
+          description: "Energy conservation rate: {{ $value }}"
+          
+      - alert: CausalReasoningFailure
+        expr: counterfactual_accuracy < 0.8
+        for: 2m
+        labels:
+          severity: warning
+          mission_impact: failure_prevention
+        annotations:
+          summary: "Causal reasoning system accuracy degraded"
+          description: "Counterfactual accuracy: {{ $value }}"
+          
+      - alert: AdaptationTimeExceeded
+        expr: adaptation_episodes_avg > 10
+        for: 5m
+        labels:
+          severity: warning
+          mission_impact: adaptability
+        annotations:
+          summary: "Meta-adaptation taking too long"
+          description: "Average adaptation time: {{ $value }} episodes"
+          
+      # Resource alerts
+      - alert: HighCPUUsage
+        expr: cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage detected"
+          
+      - alert: HighMemoryUsage
+        expr: memory_usage_percent > 85
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          
+      - alert: GPUUtilizationLow
+        expr: gpu_utilization_percent < 20
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "GPU utilization is low - consider scaling down"
+
+---
+# Prometheus Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      serviceAccountName: prometheus-sa
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v2.45.0
+        args:
+          - '--config.file=/etc/prometheus/prometheus.yml'
+          - '--storage.tsdb.path=/prometheus'
+          - '--web.console.libraries=/etc/prometheus/console_libraries'
+          - '--web.console.templates=/etc/prometheus/consoles'
+          - '--storage.tsdb.retention.time=30d'
+          - '--web.enable-lifecycle'
+          - '--web.enable-admin-api'
+        ports:
+        - containerPort: 9090
+        resources:
+          requests:
+            cpu: 500m
+            memory: 2Gi
+          limits:
+            cpu: 2000m
+            memory: 8Gi
+        volumeMounts:
+        - name: prometheus-config-volume
+          mountPath: /etc/prometheus/
+        - name: prometheus-storage-volume
+          mountPath: /prometheus/
+        livenessProbe:
+          httpGet:
+            path: /-/healthy
+            port: 9090
+          initialDelaySeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /-/ready
+            port: 9090
+          initialDelaySeconds: 10
+          timeoutSeconds: 10
+      volumes:
+      - name: prometheus-config-volume
+        configMap:
+          defaultMode: 420
+          name: prometheus-config
+      - name: prometheus-storage-volume
+        persistentVolumeClaim:
+          claimName: prometheus-pvc
+
+---
+# Prometheus Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: monitoring
+  labels:
+    app: prometheus
+spec:
+  selector:
+    app: prometheus
+  type: ClusterIP
+  ports:
+  - port: 9090
+    targetPort: 9090
+
+---
+# Grafana Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: monitoring
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+    - name: Prometheus
+      type: prometheus
+      access: proxy
+      url: http://prometheus-service:9090
+      isDefault: true
+      editable: true
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-config
+  namespace: monitoring
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+    - name: 'lunar-habitat-dashboards'
+      folder: 'Lunar Habitat RL'
+      type: file
+      disableDeletion: false
+      updateIntervalSeconds: 30
+      options:
+        path: /var/lib/grafana/dashboards
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lunar-habitat-dashboard
+  namespace: monitoring
+data:
+  lunar-habitat-overview.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Lunar Habitat RL - Mission Overview",
+        "tags": ["lunar", "habitat", "rl", "nasa"],
+        "timezone": "UTC",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Safety Violations",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "safety_violations_total",
+                "format": "time_series",
+                "refId": "A"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": null},
+                    {"color": "yellow", "value": 1},
+                    {"color": "red", "value": 3}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 2,
+            "title": "Energy Conservation Rate",
+            "type": "gauge",
+            "targets": [
+              {
+                "expr": "energy_conservation_rate",
+                "refId": "A"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "min": 0,
+                "max": 1,
+                "unit": "percentunit",
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 0.9},
+                    {"color": "green", "value": 0.95}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 3,
+            "title": "Algorithm Performance",
+            "type": "timeseries",
+            "targets": [
+              {
+                "expr": "episode_reward_mean",
+                "legendFormat": "Episode Reward",
+                "refId": "A"
+              },
+              {
+                "expr": "adaptation_success_rate",
+                "legendFormat": "Adaptation Success",
+                "refId": "B"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Causal Reasoning Metrics",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "counterfactual_accuracy",
+                "format": "table",
+                "refId": "A"
+              }
+            ]
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "5s"
+      }
+    }
+
+---
+# Grafana Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:10.0.0
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana-secret
+              key: admin-password
+        - name: GF_INSTALL_PLUGINS
+          value: "grafana-kubernetes-app"
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        volumeMounts:
+        - name: grafana-datasources
+          mountPath: /etc/grafana/provisioning/datasources
+        - name: grafana-dashboards-config
+          mountPath: /etc/grafana/provisioning/dashboards
+        - name: grafana-dashboards
+          mountPath: /var/lib/grafana/dashboards
+        - name: grafana-storage
+          mountPath: /var/lib/grafana
+      volumes:
+      - name: grafana-datasources
+        configMap:
+          name: grafana-datasources
+      - name: grafana-dashboards-config
+        configMap:
+          name: grafana-dashboards-config
+      - name: grafana-dashboards
+        configMap:
+          name: lunar-habitat-dashboard
+      - name: grafana-storage
+        persistentVolumeClaim:
+          claimName: grafana-pvc
+
+---
+# Grafana Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: monitoring
+spec:
+  selector:
+    app: grafana
+  type: LoadBalancer
+  ports:
+  - port: 3000
+    targetPort: 3000
+
+---
+# AlertManager Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+data:
+  alertmanager.yml: |
+    global:
+      smtp_smarthost: 'mission-control-smtp:587'
+      smtp_from: 'lunar-habitat-ai@terragon-labs.com'
+      
+    route:
+      group_by: ['alertname', 'mission_impact']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: 'mission-control-team'
+      routes:
+      - match:
+          severity: critical
+          mission_impact: crew_safety
+        receiver: 'emergency-response-team'
+        group_wait: 10s
+        repeat_interval: 1m
+        
+    receivers:
+    - name: 'mission-control-team'
+      email_configs:
+      - to: 'mission-control@nasa.gov'
+        subject: 'Lunar Habitat Alert: {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Mission Impact: {{ .Labels.mission_impact }}
+          Severity: {{ .Labels.severity }}
+          {{ end }}
+        
+    - name: 'emergency-response-team'
+      email_configs:
+      - to: 'emergency-response@nasa.gov,crew-safety@nasa.gov'
+        subject: 'CRITICAL: Lunar Habitat Emergency - {{ .GroupLabels.alertname }}'
+        body: |
+          🚨 CRITICAL ALERT 🚨
+          
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Mission Impact: {{ .Labels.mission_impact }}
+          Time: {{ .StartsAt }}
+          {{ end }}
+          
+          IMMEDIATE ACTION REQUIRED
+          
+      slack_configs:
+      - api_url: 'https://hooks.slack.com/services/NASA_EMERGENCY_WEBHOOK'
+        channel: '#lunar-habitat-emergencies'
+        title: 'Critical Lunar Habitat Alert'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+
+---
+# AlertManager Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      containers:
+      - name: alertmanager
+        image: prom/alertmanager:v0.25.0
+        args:
+          - '--config.file=/etc/alertmanager/alertmanager.yml'
+          - '--storage.path=/alertmanager'
+        ports:
+        - containerPort: 9093
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        volumeMounts:
+        - name: alertmanager-config-volume
+          mountPath: /etc/alertmanager/
+        - name: alertmanager-storage-volume
+          mountPath: /alertmanager/
+      volumes:
+      - name: alertmanager-config-volume
+        configMap:
+          name: alertmanager-config
+      - name: alertmanager-storage-volume
+        emptyDir: {}
+
+---
+# AlertManager Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: monitoring
+spec:
+  selector:
+    app: alertmanager
+  type: ClusterIP
+  ports:
+  - port: 9093
+    targetPort: 9093
+
+---
+# Service Accounts and RBAC
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus-sa
+  namespace: monitoring
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus-role
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - nodes/proxy
+  - nodes/metrics
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["extensions"]
+  resources:
+  - ingresses
+  verbs: ["get", "list", "watch"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus-role
+subjects:
+- kind: ServiceAccount
+  name: prometheus-sa
+  namespace: monitoring
+
+---
+# Persistent Volume Claims
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-pvc
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast-ssd
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-pvc
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+
+---
+# Secrets
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-secret
+  namespace: monitoring
+type: Opaque
+data:
+  admin-password: bHVuYXItaGFiaXRhdC1hZG1pbi0yMDI1  # lunar-habitat-admin-2025
