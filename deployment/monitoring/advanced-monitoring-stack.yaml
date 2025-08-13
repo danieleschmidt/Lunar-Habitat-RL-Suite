@@ -1,0 +1,491 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: lunar-habitat
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    
+    rule_files:
+      - "lunar_habitat_rules.yml"
+    
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+              - alertmanager:9093
+    
+    scrape_configs:
+      - job_name: 'lunar-habitat-rl'
+        static_configs:
+          - targets: ['lunar-habitat-service:8080']
+        metrics_path: /metrics
+        scrape_interval: 5s
+        
+      - job_name: 'causal-rl-agent'
+        static_configs:
+          - targets: ['causal-rl-service:8081']
+        metrics_path: /metrics
+        scrape_interval: 5s
+        
+      - job_name: 'hamiltonian-rl-agent'
+        static_configs:
+          - targets: ['hamiltonian-rl-service:8082']
+        metrics_path: /metrics
+        scrape_interval: 5s
+        
+      - job_name: 'meta-adaptation-agent'
+        static_configs:
+          - targets: ['meta-adaptation-service:8083']
+        metrics_path: /metrics
+        scrape_interval: 5s
+        
+      - job_name: 'habitat-simulator'
+        static_configs:
+          - targets: ['habitat-sim-service:8084']
+        metrics_path: /metrics
+        scrape_interval: 1s
+        
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: lunar-habitat
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus:9090
+        access: proxy
+        isDefault: true
+        
+      - name: Loki
+        type: loki
+        url: http://loki:3100
+        access: proxy
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-config
+  namespace: lunar-habitat
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    
+    providers:
+      - name: 'lunar-habitat-dashboards'
+        orgId: 1
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 30
+        options:
+          path: /etc/grafana/provisioning/dashboards
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lunar-habitat-dashboard
+  namespace: lunar-habitat
+data:
+  lunar-habitat.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Lunar Habitat Mission Control",
+        "tags": ["lunar", "habitat", "nasa", "rl"],
+        "style": "dark",
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Life Support Systems",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "habitat_o2_pressure",
+                "legendFormat": "O₂ Pressure (kPa)"
+              },
+              {
+                "expr": "habitat_co2_pressure",
+                "legendFormat": "CO₂ Pressure (kPa)"
+              },
+              {
+                "expr": "habitat_total_pressure",
+                "legendFormat": "Total Pressure (kPa)"
+              }
+            ],
+            "yAxes": [
+              {
+                "label": "Pressure (kPa)",
+                "min": 0,
+                "max": 120
+              }
+            ],
+            "alert": {
+              "name": "Critical O₂ Level",
+              "conditions": [
+                {
+                  "query": {
+                    "queryType": "",
+                    "refId": "A"
+                  },
+                  "reducer": {
+                    "params": [],
+                    "type": "last"
+                  },
+                  "evaluator": {
+                    "params": [19.0],
+                    "type": "lt"
+                  }
+                }
+              ],
+              "executionErrorState": "alerting",
+              "frequency": "10s",
+              "handler": 1,
+              "noDataState": "no_data"
+            }
+          },
+          {
+            "id": 2,
+            "title": "Power System Status",
+            "type": "singlestat",
+            "targets": [
+              {
+                "expr": "habitat_power_battery_charge",
+                "legendFormat": "Battery Charge %"
+              }
+            ],
+            "valueName": "current",
+            "colorBackground": true,
+            "thresholds": "20,50",
+            "colors": ["#d44a3a", "#e6a53b", "#37872d"]
+          },
+          {
+            "id": 3,
+            "title": "Thermal Control",
+            "type": "heatmap",
+            "targets": [
+              {
+                "expr": "habitat_thermal_zone_temperature",
+                "legendFormat": "Zone {{zone}}"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Algorithm Performance",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(causal_rl_actions_total[5m])",
+                "legendFormat": "Causal RL Actions/sec"
+              },
+              {
+                "expr": "rate(hamiltonian_rl_actions_total[5m])",
+                "legendFormat": "Hamiltonian RL Actions/sec"
+              },
+              {
+                "expr": "rate(meta_adaptation_actions_total[5m])",
+                "legendFormat": "Meta-Adaptation Actions/sec"
+              }
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Mission Success Metrics",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "habitat_survival_probability",
+                "legendFormat": "Survival Probability"
+              },
+              {
+                "expr": "habitat_resource_efficiency",
+                "legendFormat": "Resource Efficiency"
+              },
+              {
+                "expr": "habitat_crew_health_avg",
+                "legendFormat": "Crew Health Average"
+              }
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Alert Status",
+            "type": "alertlist",
+            "folderId": null,
+            "limit": 20,
+            "stateFilter": ["alerting", "pending"],
+            "recent": true
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "5s"
+      }
+    }
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: lunar-habitat
+data:
+  alertmanager.yml: |
+    global:
+      smtp_smarthost: 'localhost:587'
+      smtp_from: 'alerts@lunar-habitat.nasa.gov'
+    
+    route:
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: 'mission-control'
+      routes:
+        - match:
+            severity: critical
+          receiver: 'emergency-response'
+        - match:
+            severity: warning
+          receiver: 'operations-team'
+    
+    receivers:
+      - name: 'mission-control'
+        email_configs:
+          - to: 'mission-control@nasa.gov'
+            subject: '[Lunar Habitat] {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+            body: |
+              {{ range .Alerts }}
+              Alert: {{ .Annotations.summary }}
+              Description: {{ .Annotations.description }}
+              Labels: {{ range $k, $v := .Labels }}{{ $k }}: {{ $v }}{{ end }}
+              {{ end }}
+              
+      - name: 'emergency-response'
+        email_configs:
+          - to: 'emergency@nasa.gov'
+            subject: '[CRITICAL] Lunar Habitat Emergency'
+            body: |
+              🚨 CRITICAL HABITAT SYSTEM ALERT 🚨
+              {{ range .Alerts }}
+              System: {{ .Labels.system }}
+              Alert: {{ .Annotations.summary }}
+              Severity: {{ .Labels.severity }}
+              Time: {{ .StartsAt }}
+              
+              IMMEDIATE ACTION REQUIRED
+              {{ end }}
+        pagerduty_configs:
+          - routing_key: 'lunar-habitat-emergency-key'
+            description: 'Critical habitat system failure'
+            
+      - name: 'operations-team'
+        slack_configs:
+          - api_url: 'https://hooks.slack.com/services/lunar-habitat-ops'
+            channel: '#lunar-habitat-alerts'
+            title: 'Habitat System Warning'
+            text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: lunar-habitat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v2.45.0
+        args:
+          - '--config.file=/etc/prometheus/prometheus.yml'
+          - '--storage.tsdb.path=/prometheus/'
+          - '--web.console.libraries=/etc/prometheus/console_libraries'
+          - '--web.console.templates=/etc/prometheus/consoles'
+          - '--web.enable-lifecycle'
+          - '--storage.tsdb.retention.time=30d'
+        ports:
+        - containerPort: 9090
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+          requests:
+            cpu: 500m
+            memory: 1Gi
+        volumeMounts:
+        - name: prometheus-config-volume
+          mountPath: /etc/prometheus/
+        - name: prometheus-storage-volume
+          mountPath: /prometheus/
+      volumes:
+      - name: prometheus-config-volume
+        configMap:
+          name: prometheus-config
+      - name: prometheus-storage-volume
+        emptyDir: {}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: lunar-habitat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: grafana/grafana:10.0.0
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: "nasa-mission-control"
+        - name: GF_USERS_ALLOW_SIGN_UP
+          value: "false"
+        - name: GF_SERVER_ROOT_URL
+          value: "https://grafana.lunar-habitat.nasa.gov"
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 250m
+            memory: 512Mi
+        volumeMounts:
+        - name: grafana-datasources
+          mountPath: /etc/grafana/provisioning/datasources
+        - name: grafana-dashboards-config
+          mountPath: /etc/grafana/provisioning/dashboards
+        - name: grafana-dashboards
+          mountPath: /etc/grafana/provisioning/dashboards/dashboards
+      volumes:
+      - name: grafana-datasources
+        configMap:
+          name: grafana-datasources
+      - name: grafana-dashboards-config
+        configMap:
+          name: grafana-dashboards-config
+      - name: grafana-dashboards
+        configMap:
+          name: lunar-habitat-dashboard
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: lunar-habitat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+    spec:
+      containers:
+      - name: alertmanager
+        image: prom/alertmanager:v0.25.0
+        args:
+          - '--config.file=/etc/alertmanager/alertmanager.yml'
+          - '--storage.path=/alertmanager'
+          - '--web.external-url=https://alertmanager.lunar-habitat.nasa.gov'
+        ports:
+        - containerPort: 9093
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        - name: alertmanager-config
+          mountPath: /etc/alertmanager
+      volumes:
+      - name: alertmanager-config
+        configMap:
+          name: alertmanager-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: lunar-habitat
+spec:
+  selector:
+    app: prometheus
+  ports:
+    - port: 9090
+      targetPort: 9090
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: lunar-habitat
+spec:
+  selector:
+    app: grafana
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: LoadBalancer
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: lunar-habitat
+spec:
+  selector:
+    app: alertmanager
+  ports:
+    - port: 9093
+      targetPort: 9093
+  type: ClusterIP
