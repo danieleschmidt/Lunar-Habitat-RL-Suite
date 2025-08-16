@@ -413,8 +413,8 @@ class LunarHabitatEnv:
 
 
 def make_lunar_env(n_envs: int = 1, scenario: str = 'nominal_operations', 
-                   reward_config: str = 'survival_focused') -> List[LunarHabitatEnv]:
-    """Create multiple lunar habitat environments.
+                   reward_config: str = 'survival_focused'):
+    """Create lunar habitat environment(s).
     
     Args:
         n_envs: Number of environments to create.
@@ -422,7 +422,7 @@ def make_lunar_env(n_envs: int = 1, scenario: str = 'nominal_operations',
         reward_config: Reward configuration name.
         
     Returns:
-        List of habitat environments.
+        Single environment if n_envs=1, otherwise list of environments.
     """
     envs = []
     for i in range(n_envs):
@@ -430,4 +430,6 @@ def make_lunar_env(n_envs: int = 1, scenario: str = 'nominal_operations',
         config.scenario.name = scenario
         env = LunarHabitatEnv(config=config)
         envs.append(env)
-    return envs
+    
+    # Return single environment for n_envs=1, list otherwise
+    return envs[0] if n_envs == 1 else envs
