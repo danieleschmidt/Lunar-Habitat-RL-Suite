@@ -4,10 +4,10 @@
 # try:
 #     from .baselines import RandomAgent, HeuristicAgent
 # except ImportError:
-from .lightweight_baselines import RandomAgent, HeuristicAgent
+from .lightweight_baselines import RandomAgent, HeuristicAgent, PIDControllerAgent, GreedyAgent
 
 # Conditionally import torch-based agents
-__all__ = ["RandomAgent", "HeuristicAgent"]
+__all__ = ["RandomAgent", "HeuristicAgent", "PIDControllerAgent", "GreedyAgent"]
 
 try:
     import torch
