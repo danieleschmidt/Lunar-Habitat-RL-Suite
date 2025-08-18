@@ -1,0 +1,12 @@
+{
+  "locale": "fr",
+  "name": "Français",
+  "region_preferences": [
+    "ca-central-1",
+    "eu-west-1"
+  ],
+  "compliance": [
+    "GDPR",
+    "PIPEDA"
+  ]
+}

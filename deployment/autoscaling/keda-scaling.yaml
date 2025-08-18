@@ -1,0 +1,54 @@
+
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: lunar-habitat-rl-scaler
+  namespace: lunar-habitat-rl
+spec:
+  scaleTargetRef:
+    name: lunar-habitat-rl
+  pollingInterval: 15
+  cooldownPeriod: 300
+  idleReplicaCount: 2
+  minReplicaCount: 3
+  maxReplicaCount: 50
+  triggers:
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus:9090
+      metricName: http_requests_per_second
+      threshold: '100'
+      query: sum(rate(http_requests_total{job="lunar-habitat-rl"}[2m]))
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus:9090
+      metricName: cpu_usage_percentage
+      threshold: '70'
+      query: avg(cpu_usage_percentage{job="lunar-habitat-rl"})
+  - type: redis
+    metadata:
+      address: redis:6379
+      listName: task_queue
+      listLength: '5'
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: lunar-habitat-rl-regional-scaler
+  namespace: lunar-habitat-rl
+spec:
+  scaleTargetRef:
+    name: lunar-habitat-rl
+  pollingInterval: 30
+  cooldownPeriod: 600
+  triggers:
+  - type: prometheus
+    metadata:
+      serverAddress: http://prometheus:9090
+      metricName: regional_load_factor
+      threshold: '0.8'
+      query: |
+        (
+          sum(rate(http_requests_total{job="lunar-habitat-rl",region!=""}[5m])) by (region) /
+          sum(kube_deployment_status_replicas_available{deployment="lunar-habitat-rl"}) by (region)
+        )

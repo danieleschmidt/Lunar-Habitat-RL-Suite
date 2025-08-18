@@ -1,0 +1,170 @@
+{
+  "execution_timestamp": "2025-08-18T14:53:29.540237",
+  "execution_time_seconds": 0.38965606689453125,
+  "overall_score": 77.77777777777779,
+  "gates_summary": {
+    "total": 9,
+    "passed": 7,
+    "failed": 2,
+    "pass_rate": "77.8%"
+  },
+  "critical_failures": 1,
+  "detailed_results": [
+    {
+      "gate_name": "Code Execution",
+      "passed": true,
+      "score": 100.0,
+      "details": {
+        "core_import": "SUCCESS",
+        "env_creation": "SUCCESS",
+        "env_reset": "SUCCESS",
+        "env_step": "SUCCESS",
+        "execution_time": 0.3538210391998291
+      },
+      "execution_time": 0.3538210391998291,
+      "timestamp": "2025-08-18T14:53:29.504768",
+      "severity": "INFO"
+    },
+    {
+      "gate_name": "Test Coverage",
+      "passed": false,
+      "score": 62.307692307692314,
+      "details": {
+        "test_files_found": 27,
+        "source_files": 65,
+        "pytest_config": true,
+        "estimated_coverage": "62.3%",
+        "test_files": [
+          "test_basic_functionality.py",
+          "test_environment.py",
+          "test_robust_environment.py",
+          "test_simple_agents.py",
+          "tests/test_algorithms.py",
+          "tests/test_breakthrough_algorithms.py",
+          "tests/test_core_config.py",
+          "tests/test_distributed.py",
+          "tests/test_environments.py",
+          "tests/test_evaluation.py"
+        ]
+      },
+      "execution_time": 0.003251314163208008,
+      "timestamp": "2025-08-18T14:53:29.508067",
+      "severity": "ERROR"
+    },
+    {
+      "gate_name": "Security Posture",
+      "passed": false,
+      "score": 45.0,
+      "details": {
+        "issues_found": 6,
+        "issues": [
+          "eval() found in robust_validation_framework.py",
+          "exec() found in robust_validation_framework.py",
+          "eval() found in comprehensive_quality_gates.py",
+          "exec() found in comprehensive_quality_gates.py",
+          "Unsafe subprocess call in comprehensive_quality_gates.py",
+          "eval() found in lunar_habitat_rl/algorithms/edge_ai_deployment.py"
+        ],
+        "files_scanned": 99
+      },
+      "execution_time": 0.0069348812103271484,
+      "timestamp": "2025-08-18T14:53:29.515055",
+      "severity": "CRITICAL"
+    },
+    {
+      "gate_name": "Performance Benchmarks",
+      "passed": true,
+      "score": 100.0,
+      "details": {
+        "env_creation_time": "0.000s",
+        "memory_usage": "14.4%",
+        "cpu_count": 2,
+        "memory_available": "3374MB"
+      },
+      "execution_time": 0.0003247261047363281,
+      "timestamp": "2025-08-18T14:53:29.515469",
+      "severity": "INFO"
+    },
+    {
+      "gate_name": "Documentation Quality",
+      "passed": true,
+      "score": 100.0,
+      "details": {
+        "readme": "EXISTS",
+        "project_config": "EXISTS",
+        "docstring_coverage": "100.0%"
+      },
+      "execution_time": 0.0015099048614501953,
+      "timestamp": "2025-08-18T14:53:29.517001",
+      "severity": "INFO"
+    },
+    {
+      "gate_name": "Code Quality",
+      "passed": true,
+      "score": 85.0,
+      "details": {
+        "issues_found": 3,
+        "issues": [
+          "Many imports in lunar_habitat_rl/distributed.py",
+          "Many imports in lunar_habitat_rl/evaluation.py",
+          "Many imports in lunar_habitat_rl/hyperopt.py"
+        ],
+        "files_analyzed": 20
+      },
+      "execution_time": 0.009886026382446289,
+      "timestamp": "2025-08-18T14:53:29.526920",
+      "severity": "INFO"
+    },
+    {
+      "gate_name": "Dependency Security",
+      "passed": true,
+      "score": 80,
+      "details": {
+        "dependency_files": [
+          "requirements.txt",
+          "pyproject.toml"
+        ],
+        "security_note": "Basic dependency management check"
+      },
+      "execution_time": 7.05718994140625e-05,
+      "timestamp": "2025-08-18T14:53:29.527073",
+      "severity": "INFO"
+    },
+    {
+      "gate_name": "Research Reproducibility",
+      "passed": true,
+      "score": 80.0,
+      "details": {
+        "findings": [
+          "Found 3 benchmark files",
+          "Found 8 research/validation files",
+          "Statistical analysis indicators found in 3 files"
+        ],
+        "benchmark_files": 3,
+        "research_files": 8
+      },
+      "execution_time": 0.012889623641967773,
+      "timestamp": "2025-08-18T14:53:29.539975",
+      "severity": "INFO"
+    },
+    {
+      "gate_name": "Deployment Readiness",
+      "passed": true,
+      "score": 100.0,
+      "details": {
+        "docker": "EXISTS",
+        "kubernetes": "EXISTS",
+        "cicd": "EXISTS",
+        "monitoring": "EXISTS"
+      },
+      "execution_time": 9.942054748535156e-05,
+      "timestamp": "2025-08-18T14:53:29.540155",
+      "severity": "INFO"
+    }
+  ],
+  "recommendations": [
+    "\ud83e\uddea MEDIUM: Improve test coverage (target: 85%)",
+    "\ud83d\udee1\ufe0f HIGH: Address security vulnerabilities"
+  ],
+  "production_ready": false
+}

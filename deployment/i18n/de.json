@@ -1,0 +1,11 @@
+{
+  "locale": "de",
+  "name": "Deutsch",
+  "region_preferences": [
+    "eu-west-1"
+  ],
+  "compliance": [
+    "GDPR",
+    "SOC2"
+  ]
+}

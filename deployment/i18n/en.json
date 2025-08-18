@@ -1,0 +1,12 @@
+{
+  "locale": "en",
+  "name": "English",
+  "region_preferences": [
+    "us-east-1",
+    "ca-central-1"
+  ],
+  "compliance": [
+    "SOC2",
+    "PCI-DSS"
+  ]
+}

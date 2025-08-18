@@ -1,0 +1,38 @@
+{
+  "report_timestamp": "2025-08-18T14:51:53.562959",
+  "total_operations": 1,
+  "operations_summary": {
+    "environment_creation_batch": {
+      "count": 1,
+      "total_time": 0.4982025623321533,
+      "avg_time": 0.4982025623321533,
+      "min_time": 0.4982025623321533,
+      "max_time": 0.4982025623321533,
+      "total_memory": 47476736,
+      "avg_memory": 47476736.0
+    }
+  },
+  "resource_pool_status": {
+    "current_workers": 2,
+    "min_workers": 2,
+    "max_workers": 6,
+    "task_queue_size": 0,
+    "completed_tasks": 5,
+    "failed_tasks": 0,
+    "average_task_time": 0.0016142934560775758,
+    "success_rate": 100.0
+  },
+  "cache_statistics": {
+    "size": 5,
+    "max_size": 1000,
+    "utilization": 0.5,
+    "patterns_tracked": 5,
+    "total_accesses": 20
+  },
+  "system_status": {
+    "cpu_count": 2,
+    "memory_total": 3942,
+    "memory_available": 3373,
+    "memory_percent": 14.4
+  }
+}

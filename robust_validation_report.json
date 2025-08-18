@@ -1,0 +1,197 @@
+{
+  "validation_timestamp": "2025-08-18T14:50:11.764245",
+  "summary": {
+    "total_checks": 16,
+    "passed": 14,
+    "failed": 2,
+    "pass_rate": "87.5%",
+    "critical_issues": 0
+  },
+  "categories": {
+    "environment": {
+      "total": 9,
+      "passed": 9,
+      "results": [
+        {
+          "metric": "python_version",
+          "passed": true,
+          "value": "3.12.3",
+          "threshold": ">=3.9",
+          "severity": "INFO",
+          "details": "Python version: sys.version_info(major=3, minor=12, micro=3, releaselevel='final', serial=0)",
+          "recommendation": "Python version acceptable",
+          "timestamp": "2025-08-18T14:50:11.235382"
+        },
+        {
+          "metric": "import_numpy",
+          "passed": true,
+          "value": "Available",
+          "threshold": "Required",
+          "severity": "INFO",
+          "details": "Successfully imported numpy",
+          "recommendation": "",
+          "timestamp": "2025-08-18T14:50:11.322769"
+        },
+        {
+          "metric": "import_gymnasium",
+          "passed": true,
+          "value": "Available",
+          "threshold": "Required",
+          "severity": "INFO",
+          "details": "Successfully imported gymnasium",
+          "recommendation": "",
+          "timestamp": "2025-08-18T14:50:11.399647"
+        },
+        {
+          "metric": "import_pathlib",
+          "passed": true,
+          "value": "Available",
+          "threshold": "Required",
+          "severity": "INFO",
+          "details": "Successfully imported pathlib",
+          "recommendation": "",
+          "timestamp": "2025-08-18T14:50:11.399658"
+        },
+        {
+          "metric": "import_json",
+          "passed": true,
+          "value": "Available",
+          "threshold": "Required",
+          "severity": "INFO",
+          "details": "Successfully imported json",
+          "recommendation": "",
+          "timestamp": "2025-08-18T14:50:11.399661"
+        },
+        {
+          "metric": "import_asyncio",
+          "passed": true,
+          "value": "Available",
+          "threshold": "Required",
+          "severity": "INFO",
+          "details": "Successfully imported asyncio",
+          "recommendation": "",
+          "timestamp": "2025-08-18T14:50:11.399665"
+        },
+        {
+          "metric": "file_exists_README.md",
+          "passed": true,
+          "value": "Exists",
+          "threshold": "Required",
+          "severity": "INFO",
+          "details": "File: README.md",
+          "recommendation": "File exists",
+          "timestamp": "2025-08-18T14:50:11.399769"
+        },
+        {
+          "metric": "file_exists_pyproject.toml",
+          "passed": true,
+          "value": "Exists",
+          "threshold": "Required",
+          "severity": "INFO",
+          "details": "File: pyproject.toml",
+          "recommendation": "File exists",
+          "timestamp": "2025-08-18T14:50:11.399811"
+        },
+        {
+          "metric": "file_exists_lunar_habitat_rl/__init__.py",
+          "passed": true,
+          "value": "Exists",
+          "threshold": "Required",
+          "severity": "INFO",
+          "details": "File: lunar_habitat_rl/__init__.py",
+          "recommendation": "File exists",
+          "timestamp": "2025-08-18T14:50:11.399844"
+        }
+      ]
+    },
+    "performance": {
+      "total": 3,
+      "passed": 3,
+      "results": [
+        {
+          "metric": "memory_usage",
+          "passed": true,
+          "value": "14.0%",
+          "threshold": "<90.0%",
+          "severity": "INFO",
+          "details": "System memory usage: 14.0%",
+          "recommendation": "Memory usage acceptable",
+          "timestamp": "2025-08-18T14:50:11.415235"
+        },
+        {
+          "metric": "disk_space",
+          "passed": true,
+          "value": "84.0% free",
+          "threshold": ">10.0% free",
+          "severity": "INFO",
+          "details": "Free disk space: 19.7 GB (84.0%)",
+          "recommendation": "Disk space sufficient",
+          "timestamp": "2025-08-18T14:50:11.415277"
+        },
+        {
+          "metric": "env_creation_time",
+          "passed": true,
+          "value": "0.211s",
+          "threshold": "<5.0s",
+          "severity": "INFO",
+          "details": "Environment creation took 0.211 seconds",
+          "recommendation": "Environment creation time acceptable",
+          "timestamp": "2025-08-18T14:50:11.625961"
+        }
+      ]
+    },
+    "security": {
+      "total": 4,
+      "passed": 2,
+      "results": [
+        {
+          "metric": "critical_vulnerabilities",
+          "passed": true,
+          "value": "0",
+          "threshold": "0",
+          "severity": "INFO",
+          "details": "Found 0 critical vulnerabilities",
+          "recommendation": "No critical vulnerabilities found",
+          "timestamp": "2025-08-18T14:50:11.764087"
+        },
+        {
+          "metric": "high_vulnerabilities",
+          "passed": true,
+          "value": "0",
+          "threshold": "0",
+          "severity": "INFO",
+          "details": "Found 0 high-severity vulnerabilities",
+          "recommendation": "No high-severity vulnerabilities found",
+          "timestamp": "2025-08-18T14:50:11.764097"
+        },
+        {
+          "metric": "file_permissions_pyproject.toml",
+          "passed": false,
+          "value": "Mode: 644",
+          "threshold": "Not world-readable",
+          "severity": "WARNING",
+          "details": "File permissions for pyproject.toml",
+          "recommendation": "Secure file permissions for pyproject.toml",
+          "timestamp": "2025-08-18T14:50:11.764151"
+        },
+        {
+          "metric": "file_permissions_requirements.txt",
+          "passed": false,
+          "value": "Mode: 644",
+          "threshold": "Not world-readable",
+          "severity": "WARNING",
+          "details": "File permissions for requirements.txt",
+          "recommendation": "Secure file permissions for requirements.txt",
+          "timestamp": "2025-08-18T14:50:11.764180"
+        }
+      ]
+    }
+  },
+  "critical_issues": [],
+  "recommendations": [
+    "=== WARNING Priority ===",
+    "\u2022 Secure file permissions for pyproject.toml",
+    "\u2022 Secure file permissions for requirements.txt"
+  ],
+  "overall_status": "FAILED"
+}

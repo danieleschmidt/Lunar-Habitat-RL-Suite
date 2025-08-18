@@ -1,0 +1,11 @@
+{
+  "locale": "zh-CN",
+  "name": "中文",
+  "region_preferences": [
+    "ap-southeast-1"
+  ],
+  "compliance": [
+    "PDPA",
+    "SOC2"
+  ]
+}

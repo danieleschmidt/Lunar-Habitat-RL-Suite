@@ -1,3 +1,4 @@
+
 version: '3.8'
 
 services:
@@ -5,83 +6,74 @@ services:
     build:
       context: ../..
       dockerfile: deployment/docker/Dockerfile
-    container_name: lunar-habitat-rl
-    restart: unless-stopped
+      target: production
     ports:
-      - "8080:8080"
-      - "8443:8443"
+      - "8000:8000"
     environment:
-      - PYTHONPATH=/app
+      - ENVIRONMENT=production
       - LOG_LEVEL=INFO
-      - PHYSICS_ENABLED=true
-      - MAX_WORKERS=4
+      - PYTHONPATH=/app
     volumes:
-      - ../../logs:/app/logs
-      - ../../data:/app/data
-      - ../../results:/app/results
-    networks:
-      - habitat-network
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 4G
-        reservations:
-          cpus: '0.5'
-          memory: 1G
+      - app_logs:/app/logs
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "from lunar_habitat_rl import LunarHabitatEnv; env = LunarHabitatEnv(physics_enabled=False); env.close()"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-  monitoring:
-    image: prom/prometheus:latest
-    container_name: habitat-monitoring
-    restart: unless-stopped
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--web.enable-lifecycle'
-    networks:
-      - habitat-network
-
-  dashboard:
-    image: grafana/grafana:latest
-    container_name: habitat-dashboard
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=habitat2024
-    volumes:
-      - grafana-storage:/var/lib/grafana
-      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
-    networks:
-      - habitat-network
-
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+  
   redis:
-    image: redis:alpine
-    container_name: habitat-redis
-    restart: unless-stopped
+    image: redis:7-alpine
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/data
-    networks:
-      - habitat-network
-    command: redis-server --appendonly yes
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+  
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+  
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
 
 volumes:
-  grafana-storage:
-  redis-data:
+  app_logs:
+  redis_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
-  habitat-network:
+  default:
     driver: bridge

@@ -1,0 +1,11 @@
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: lunar-habitat-rl-pdb
+  namespace: lunar-habitat-rl
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: lunar-habitat-rl

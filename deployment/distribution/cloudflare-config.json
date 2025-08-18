@@ -1,0 +1,63 @@
+{
+  "zone": "lunar-habitat-rl.com",
+  "settings": {
+    "ssl": "strict",
+    "security_level": "high",
+    "cache_level": "aggressive",
+    "minify": {
+      "css": true,
+      "html": true,
+      "js": true
+    },
+    "brotli": true,
+    "http2": true,
+    "http3": true
+  },
+  "page_rules": [
+    {
+      "targets": [
+        {
+          "target": "url",
+          "constraint": {
+            "operator": "matches",
+            "value": "*.lunar-habitat-rl.com/api/*"
+          }
+        }
+      ],
+      "actions": [
+        {
+          "id": "cache_level",
+          "value": "bypass"
+        },
+        {
+          "id": "security_level",
+          "value": "high"
+        }
+      ]
+    }
+  ],
+  "load_balancing": {
+    "pools": [
+      {
+        "name": "us-east-1",
+        "origins": [
+          {
+            "name": "us-east-1-primary",
+            "address": "us-east-1-lb.lunar-habitat-rl.internal",
+            "weight": 1
+          }
+        ]
+      },
+      {
+        "name": "eu-west-1",
+        "origins": [
+          {
+            "name": "eu-west-1-primary",
+            "address": "eu-west-1-lb.lunar-habitat-rl.internal",
+            "weight": 1
+          }
+        ]
+      }
+    ]
+  }
+}
