@@ -1,0 +1,11 @@
+{
+  "locale": "ja",
+  "name": "日本語",
+  "region_preferences": [
+    "ap-southeast-1"
+  ],
+  "compliance": [
+    "PDPA",
+    "SOC2"
+  ]
+}

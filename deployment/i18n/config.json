@@ -1,0 +1,33 @@
+{
+  "default_language": "en",
+  "supported_languages": [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "ja",
+    "zh-CN"
+  ],
+  "fallback_language": "en",
+  "region_mapping": {
+    "us-east-1": [
+      "en",
+      "es"
+    ],
+    "eu-west-1": [
+      "en",
+      "es",
+      "fr",
+      "de"
+    ],
+    "ap-southeast-1": [
+      "en",
+      "ja",
+      "zh-CN"
+    ],
+    "ca-central-1": [
+      "en",
+      "fr"
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: lunar-habitat-rl-backup
+  namespace: velero
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM UTC
+  template:
+    includedNamespaces:
+    - lunar-habitat-rl
+    includedResources:
+    - '*'
+    storageLocation: default
+    ttl: 720h0m0s  # 30 days retention
+    hooks:
+      resources:
+      - name: postgres-backup
+        includedNamespaces:
+        - lunar-habitat-rl
+        excludedResources: []
+        labelSelector:
+          matchLabels:
+            app: postgres
+        pre:
+        - exec:
+            container: postgres
+            command:
+            - /bin/bash
+            - -c
+            - pg_dump lunar_habitat_rl > /tmp/backup.sql
+            onError: Fail
+            timeout: 5m
+---
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: lunar-habitat-rl-weekly-backup
+  namespace: velero
+spec:
+  schedule: "0 1 * * 0"  # Weekly on Sunday at 1 AM UTC
+  template:
+    includedNamespaces:
+    - lunar-habitat-rl
+    storageLocation: long-term
+    ttl: 2160h0m0s  # 90 days retention

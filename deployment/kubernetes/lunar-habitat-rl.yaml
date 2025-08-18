@@ -1,0 +1,195 @@
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: lunar-habitat-rl
+  labels:
+    name: lunar-habitat-rl
+    environment: production
+    compliance.gdpr: "true"
+    compliance.soc2: "true"
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lunar-habitat-rl
+  namespace: lunar-habitat-rl
+  labels:
+    app: lunar-habitat-rl
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: lunar-habitat-rl
+  template:
+    metadata:
+      labels:
+        app: lunar-habitat-rl
+        version: v1
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+      - name: lunar-habitat-rl
+        image: lunar-habitat-rl:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          protocol: TCP
+        env:
+        - name: ENVIRONMENT
+          value: "production"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: REDIS_URL
+          value: "redis://redis:6379/0"
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2
+            memory: 4Gi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: cache
+          mountPath: /app/.cache
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: cache
+        emptyDir: {}
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: lunar-habitat-rl
+  namespace: lunar-habitat-rl
+  labels:
+    app: lunar-habitat-rl
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: lunar-habitat-rl
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: lunar-habitat-rl
+  namespace: lunar-habitat-rl
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+spec:
+  tls:
+  - hosts:
+    - lunar-habitat-rl.com
+    - api.lunar-habitat-rl.com
+    secretName: lunar-habitat-rl-tls
+  rules:
+  - host: lunar-habitat-rl.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: lunar-habitat-rl
+            port:
+              number: 8000
+  - host: api.lunar-habitat-rl.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: lunar-habitat-rl
+            port:
+              number: 8000
+---
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: lunar-habitat-rl-hpa
+  namespace: lunar-habitat-rl
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: lunar-habitat-rl
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+      - type: Pods
+        value: 2
+        periodSeconds: 60
+      selectPolicy: Max
+---
