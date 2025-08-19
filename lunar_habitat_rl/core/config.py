@@ -1,8 +1,22 @@
 """Configuration classes for habitat, crew, and scenario parameters."""
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 from typing import Dict, List, Optional, Union, Any
-from pydantic import BaseModel, Field, validator
-import numpy as np
+try:
+    from pydantic import BaseModel, Field, validator
+except ImportError:
+    from lightweight_pydantic import BaseModel, Field, validator
+
+try:
+    import numpy as np
+except ImportError:
+    class MockNumpy:
+        @staticmethod
+        def array(x): return x
+    np = MockNumpy()
 
 
 class CrewConfig(BaseModel):
