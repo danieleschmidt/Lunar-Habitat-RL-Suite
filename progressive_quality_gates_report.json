@@ -1,0 +1,48 @@
+{
+  "execution_timestamp": "2025-08-19 20:41:44",
+  "total_duration": 0.5813968181610107,
+  "generations_completed": 3,
+  "overall_status": "PARTIAL_PASS",
+  "results": {
+    "generation_1": {
+      "generation": 1,
+      "status": "PARTIAL_PASS",
+      "gates_passed": 4,
+      "gates_total": 6,
+      "overall_score": 0.65,
+      "duration": 0.3337588310241699,
+      "critical_issues": 0,
+      "recommendations": [
+        "Address 2 failed quality gates",
+        "Improve 2 gates with low scores"
+      ]
+    },
+    "generation_2": {
+      "generation": 2,
+      "status": "PARTIAL_PASS",
+      "gates_passed": 5,
+      "gates_total": 6,
+      "overall_score": 0.75,
+      "duration": 0.1340320110321045,
+      "critical_issues": 0,
+      "recommendations": [
+        "Address 1 failed quality gates",
+        "Improve 1 gates with low scores"
+      ]
+    },
+    "generation_3": {
+      "generation": 3,
+      "status": "PASSED",
+      "gates_passed": 6,
+      "gates_total": 6,
+      "overall_score": 1.0,
+      "duration": 0.11313390731811523,
+      "critical_issues": 0,
+      "recommendations": []
+    }
+  },
+  "recommendations": [
+    "\u2705 1/3 generations passed",
+    "\ud83d\udd27 Focus on failed generation issues before proceeding"
+  ]
+}
