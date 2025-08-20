@@ -216,14 +216,23 @@ class ComprehensiveQualityValidator:
                     with open(file_path, 'r', encoding='utf-8') as f:
                         content = f.read()
                         
-                        # Check for potential security issues
-                        if 'eval(' in content:
-                            issues.append(f"eval() found in {file_path}")
-                            security_score -= 10
+                        # Check for potential security issues (excluding legitimate PyTorch usage)
+                        # Skip model.eval() which is legitimate PyTorch usage
+                        if 'eval(' in content and 'model.eval()' not in content and '.eval()' not in content:
+                            # More precise detection for actual eval function calls
+                            lines = content.split('\n')
+                            for line_num, line in enumerate(lines, 1):
+                                if 'eval(' in line and not line.strip().endswith('.eval()') and 'model.eval()' not in line and not line.strip().startswith('#'):
+                                    issues.append(f"eval() found in {file_path}:{line_num}")
+                                    security_score -= 10
                         
                         if 'exec(' in content:
-                            issues.append(f"exec() found in {file_path}")
-                            security_score -= 10
+                            # More precise detection for actual exec function calls
+                            lines = content.split('\n')
+                            for line_num, line in enumerate(lines, 1):
+                                if 'exec(' in line and not line.strip().startswith('#'):
+                                    issues.append(f"exec() found in {file_path}:{line_num}")
+                                    security_score -= 10
                         
                         if 'subprocess.call' in content and 'shell=True' in content:
                             issues.append(f"Unsafe subprocess call in {file_path}")
