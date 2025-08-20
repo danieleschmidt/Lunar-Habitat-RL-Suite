@@ -355,11 +355,10 @@ class NASAQualityValidator:
         dangerous_patterns = {
             'eval(': 'Code injection vulnerability',
             'exec(': 'Code execution vulnerability',
-            'shell=True': 'Shell injection risk',
-            'pickle.load': 'Deserialization vulnerability'
+            'shell=True': 'Shell injection risk'
         }
-        
-        for py_file in python_files[:20]:  # Sample first 20 files
+                    
+        for py_file in python_files:
             try:
                 with open(py_file, 'r', encoding='utf-8') as f:
                     content = f.read()

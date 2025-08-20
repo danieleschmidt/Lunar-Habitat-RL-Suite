@@ -9,6 +9,23 @@ from ..core.lightweight_state import HabitatState, ActionSpace
 
 
 class MockObservationSpace:
+    def _validate_action(self, action):
+        """Validate action input for security and type safety"""
+        if not isinstance(action, (int, float, np.number, np.ndarray)):
+            raise ValueError(f"Invalid action type: {type(action)}. Must be numeric.")
+        
+        if hasattr(action, '__len__') and len(action) != self.action_space.shape[0]:
+            raise ValueError(f"Invalid action shape: {np.array(action).shape}. Expected: {self.action_space.shape}")
+        
+        # Convert to numpy array for consistency
+        action = np.array(action, dtype=np.float32)
+        
+        # Clip to action space bounds for safety
+        if hasattr(self.action_space, 'low') and hasattr(self.action_space, 'high'):
+            action = np.clip(action, self.action_space.low, self.action_space.high)
+        
+        return action
+
     """Mock observation space for lightweight implementation."""
     
     def __init__(self, dims: int):

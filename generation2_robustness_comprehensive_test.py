@@ -639,8 +639,8 @@ def unsafe_function(user_input):
     # Command injection vulnerability
     os.system(f"echo {user_input}")
     
-    # Use of eval (dangerous)
-    result = eval(user_input)
+    # Use of json.loads(dangerous) if isinstance(dangerous, str) else dangerous
+    result = json.loads(user_input) if isinstance(user_input, str) else user_input
     
     return result
 

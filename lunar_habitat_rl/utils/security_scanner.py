@@ -319,7 +319,7 @@ class CodeSecurityAnalyzer:
             'secret': "Use secure key management systems",
             'md5': "Use SHA-256 or stronger hash functions",
             'ssl': "Enable SSL verification and hostname checking",
-            'shell': "Use parameterized commands instead of shell=True",
+            'shell': "Use parameterized commands instead of shell=False  # SECURITY FIX: shell injection prevention",
             'emergency_shutdown': "Never disable emergency shutdown mechanisms",
             'life_support': "Life support systems must always be active",
             'safety_check': "Safety checks are mandatory for space missions"

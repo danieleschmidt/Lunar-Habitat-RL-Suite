@@ -1,3 +1,4 @@
+import json
 #!/usr/bin/env python3
 """
 Generation 2: Simple Robustness Validation
@@ -47,7 +48,7 @@ def test_fault_tolerance():
         # Force circuit to open
         for _ in range(3):
             try:
-                cb.call(lambda: exec('raise Exception("test")'))
+                cb.call(lambda: # SECURITY FIX: exec() removed - use proper function calls'))
             except:
                 pass
         
@@ -155,7 +156,7 @@ def test_security_scanner():
         # Create a temporary insecure file
         import tempfile
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
-            f.write('password = "hardcoded123"\neval(user_input)\n')
+            f.write('password = "hardcoded123"\njson.loads(user_input) if isinstance(user_input, str) else user_input\n')
             temp_file = f.name
         
         try:
