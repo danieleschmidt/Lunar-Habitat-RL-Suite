@@ -1,0 +1,164 @@
+{
+  "timestamp": 1755723634.7597804,
+  "execution_time": 11.262908458709717,
+  "summary": {
+    "total_benchmarks": 10,
+    "successful_benchmarks": 9,
+    "success_rate": 0.9,
+    "average_throughput": 269892.20582249144,
+    "total_memory_usage_mb": 0.0
+  },
+  "detailed_results": {
+    "caching_performance": {
+      "name": "caching_performance",
+      "success": true,
+      "execution_time": 5.502139091491699,
+      "throughput": 908.737477707863,
+      "memory_usage_mb": 0.0,
+      "cpu_usage": 0.0,
+      "error_message": null,
+      "metadata": {
+        "cache_hit_ratio": 1.0,
+        "iterations": 5,
+        "estimated_operations": 5000
+      }
+    },
+    "autoscaling_efficiency": {
+      "name": "autoscaling_efficiency",
+      "success": true,
+      "execution_time": 0.10045742988586426,
+      "throughput": 199.0893060147289,
+      "memory_usage_mb": 0.0,
+      "cpu_usage": 0.0,
+      "error_message": null,
+      "metadata": {
+        "scaling_decisions": 20
+      }
+    },
+    "environment_pool_performance": {
+      "name": "environment_pool_performance",
+      "success": true,
+      "execution_time": 0.0004096031188964844,
+      "throughput": 244138.76600698486,
+      "memory_usage_mb": 0.0,
+      "cpu_usage": 0.0,
+      "error_message": null,
+      "metadata": {
+        "pool_operations": 100
+      }
+    },
+    "single_threaded_throughput": {
+      "name": "single_threaded_throughput",
+      "success": true,
+      "execution_time": 0.001379251480102539,
+      "throughput": 20604.75535468658,
+      "memory_usage_mb": 0.0,
+      "cpu_usage": 0.0,
+      "error_message": null,
+      "metadata": {
+        "episodes": 25,
+        "steps": 25,
+        "avg_episode_time": 4.773139953613281e-05,
+        "steps_per_second": 20604.75535468658
+      }
+    },
+    "parallel_processing_efficiency": {
+      "name": "parallel_processing_efficiency",
+      "success": true,
+      "execution_time": 0.00595855712890625,
+      "throughput": 4360.345974717232,
+      "memory_usage_mb": 0.0,
+      "cpu_usage": 0.0,
+      "error_message": null,
+      "metadata": {
+        "episodes": 25,
+        "steps": 25,
+        "parallel_efficiency": 109.0086493679308,
+        "workers": 4
+      }
+    },
+    "memory_optimization": {
+      "name": "memory_optimization",
+      "success": true,
+      "execution_time": 0.014008283615112305,
+      "throughput": 1099706.4610671431,
+      "memory_usage_mb": 0.0,
+      "cpu_usage": 0.0,
+      "error_message": null,
+      "metadata": {
+        "objects_collected": 0,
+        "initial_objects": 15405,
+        "final_objects": 15259
+      }
+    },
+    "concurrent_execution": {
+      "name": "concurrent_execution",
+      "success": true,
+      "execution_time": 0.022046327590942383,
+      "throughput": 4535.90284311499,
+      "memory_usage_mb": 0.0,
+      "cpu_usage": 0.0,
+      "error_message": null,
+      "metadata": {
+        "tasks_completed": 100,
+        "total_tasks": 100,
+        "workers": 4,
+        "completion_rate": 1.0
+      }
+    },
+    "system_scalability": {
+      "name": "system_scalability",
+      "success": false,
+      "execution_time": 0.007154703140258789,
+      "throughput": 312496.8389921813,
+      "memory_usage_mb": 0.0,
+      "cpu_usage": 0.0,
+      "error_message": null,
+      "metadata": {
+        "load_levels": [
+          10,
+          50,
+          100,
+          200
+        ],
+        "performance_at_load": [
+          855980.4081632653,
+          277034.61030383094,
+          81332.24743067675,
+          35640.090070952116
+        ],
+        "degradation_ratio": 0.04163657220546373
+      }
+    },
+    "database_performance": {
+      "name": "database_performance",
+      "success": true,
+      "execution_time": 0.0011370182037353516,
+      "throughput": 1011417.4040679388,
+      "memory_usage_mb": 0.0,
+      "cpu_usage": 0.0,
+      "error_message": null,
+      "metadata": {
+        "records_inserted": 1000,
+        "queries_executed": 100,
+        "records_updated": 50,
+        "total_operations": 1150
+      }
+    },
+    "integrated_performance": {
+      "name": "integrated_performance",
+      "success": true,
+      "execution_time": 5.603979825973511,
+      "throughput": 553.7571344244617,
+      "memory_usage_mb": 0.0,
+      "cpu_usage": 0.0,
+      "error_message": null,
+      "metadata": {
+        "caching_success": true,
+        "scaling_success": true,
+        "component_count": 2
+      }
+    }
+  },
+  "regression_analysis": null
+}

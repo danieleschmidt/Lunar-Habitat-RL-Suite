@@ -1,0 +1,311 @@
+{
+  "nasa_mission_readiness": {
+    "overall_score": 76.92307692307693,
+    "certification_level": "DEVELOPMENT",
+    "risk_assessment": "CRITICAL",
+    "mission_ready": false,
+    "critical_failures": 3,
+    "recommendations": [
+      "\ud83d\udea8 CRITICAL: Address mission-critical failures immediately",
+      "\ud83d\udee1\ufe0f SECURITY: Address 2 security concerns",
+      "\ud83d\udd17 INTEGRATION: Fix 1 integration issues",
+      "\u274c NEEDS WORK: Significant improvements required"
+    ]
+  },
+  "execution_summary": {
+    "execution_timestamp": "2025-08-20T22:03:14.820864",
+    "execution_time_seconds": 0.2777578830718994,
+    "total_gates": 13,
+    "passed_gates": 10,
+    "failed_gates": 3,
+    "pass_rate_percentage": 76.92307692307693
+  },
+  "category_scores": {
+    "CODE": 100.0,
+    "PERFORMANCE": 100.0,
+    "SECURITY": -67.5,
+    "NASA_MISSION": 110.0,
+    "INTEGRATION": 75.0
+  },
+  "category_counts": {
+    "CODE": 4,
+    "PERFORMANCE": 3,
+    "SECURITY": 2,
+    "NASA_MISSION": 2,
+    "INTEGRATION": 2
+  },
+  "detailed_results": [
+    {
+      "gate_name": "Package Imports",
+      "category": "CODE",
+      "passed": true,
+      "score": 100.0,
+      "details": {
+        "core_import": "SUCCESS"
+      },
+      "execution_time": 0.029720544815063477,
+      "mission_critical": true
+    },
+    {
+      "gate_name": "Environment Creation",
+      "category": "CODE",
+      "passed": true,
+      "score": 100.0,
+      "details": {
+        "env_creation": "SUCCESS",
+        "env_reset": "SUCCESS",
+        "env_step": "SUCCESS",
+        "observation_type": "<class 'list'>",
+        "reward": "3.970325"
+      },
+      "execution_time": 0.0004961490631103516,
+      "mission_critical": true
+    },
+    {
+      "gate_name": "Generation Integration",
+      "category": "CODE",
+      "passed": true,
+      "score": 100.0,
+      "details": {
+        "Generation 1": "EXISTS",
+        "Generation 2": "EXISTS",
+        "Generation 3": "EXISTS"
+      },
+      "execution_time": 0.0002703666687011719,
+      "mission_critical": true
+    },
+    {
+      "gate_name": "Configuration System",
+      "category": "CODE",
+      "passed": true,
+      "score": 100.0,
+      "details": {
+        "config_creation": "SUCCESS",
+        "crew_size": "UNKNOWN",
+        "max_episode_steps": "UNKNOWN"
+      },
+      "execution_time": 3.600120544433594e-05,
+      "mission_critical": false
+    },
+    {
+      "gate_name": "Throughput Benchmarks",
+      "category": "PERFORMANCE",
+      "passed": true,
+      "score": 100.0,
+      "details": {
+        "episodes_completed": 5,
+        "total_time": "0.004s",
+        "eps_per_second": "1249.72"
+      },
+      "execution_time": 0.004094600677490234,
+      "mission_critical": true
+    },
+    {
+      "gate_name": "Memory Usage",
+      "category": "PERFORMANCE",
+      "passed": true,
+      "score": 100.0,
+      "details": {
+        "initial_memory": "13.5%",
+        "final_memory": "13.5%",
+        "memory_increase": "0.0%",
+        "environments_created": 3
+      },
+      "execution_time": 0.023702383041381836,
+      "mission_critical": true
+    },
+    {
+      "gate_name": "Response Time",
+      "category": "PERFORMANCE",
+      "passed": true,
+      "score": 100.0,
+      "details": {
+        "env_creation_time": "0.0000s",
+        "env_reset_time": "0.0000s",
+        "avg_step_time": "0.0000s",
+        "max_step_time": "0.0001s"
+      },
+      "execution_time": 0.0009014606475830078,
+      "mission_critical": true
+    },
+    {
+      "gate_name": "Security Scanning",
+      "category": "SECURITY",
+      "passed": false,
+      "score": -160.0,
+      "details": {
+        "vulnerabilities_found": 13,
+        "files_scanned": 20,
+        "vulnerabilities": [
+          {
+            "file": "comprehensive_quality_gates.py",
+            "pattern": "eval(",
+            "description": "Code injection vulnerability"
+          },
+          {
+            "file": "comprehensive_quality_gates.py",
+            "pattern": "exec(",
+            "description": "Code execution vulnerability"
+          },
+          {
+            "file": "robust_validation_framework.py",
+            "pattern": "eval(",
+            "description": "Code injection vulnerability"
+          },
+          {
+            "file": "robust_validation_framework.py",
+            "pattern": "exec(",
+            "description": "Code execution vulnerability"
+          },
+          {
+            "file": "generation2_simple_validation.py",
+            "pattern": "exec(",
+            "description": "Code execution vulnerability"
+          }
+        ]
+      },
+      "execution_time": 0.020884990692138672,
+      "mission_critical": true
+    },
+    {
+      "gate_name": "Input Validation",
+      "category": "SECURITY",
+      "passed": false,
+      "score": 25.0,
+      "details": {
+        "validation_tests": [
+          "PASSED: Rejected <class 'NoneType'>",
+          "FAILED: Accepted <class 'str'>",
+          "FAILED: Accepted <class 'list'>",
+          "FAILED: Accepted <class 'dict'>"
+        ],
+        "input_validation_score": 25.0
+      },
+      "execution_time": 0.0001914501190185547,
+      "mission_critical": true
+    },
+    {
+      "gate_name": "Mission Safety",
+      "category": "NASA_MISSION",
+      "passed": true,
+      "score": 100.0,
+      "details": {
+        "safety_files_found": 3,
+        "safety_systems": "PRESENT",
+        "stability_test": "COMPLETED"
+      },
+      "execution_time": 0.06017041206359863,
+      "mission_critical": true
+    },
+    {
+      "gate_name": "Space Environment Compatibility",
+      "category": "NASA_MISSION",
+      "passed": true,
+      "score": 120.0,
+      "details": {
+        "space_considerations": [
+          "pressure",
+          "thermal",
+          "temperature"
+        ],
+        "space_indicators_found": 3,
+        "rapid_operations_test": "PASSED"
+      },
+      "execution_time": 0.0354161262512207,
+      "mission_critical": true
+    },
+    {
+      "gate_name": "End-to-End Functionality",
+      "category": "INTEGRATION",
+      "passed": false,
+      "score": 50.0,
+      "details": {
+        "workflow_test": "FAILED: 'RandomAgent' object has no attribute 'act'",
+        "component_integration": "SUCCESS"
+      },
+      "execution_time": 0.0034809112548828125,
+      "mission_critical": true
+    },
+    {
+      "gate_name": "Production Deployment Readiness",
+      "category": "INTEGRATION",
+      "passed": true,
+      "score": 100.0,
+      "details": {
+        "deployment_components": [
+          "Docker",
+          "Kubernetes",
+          "CI/CD",
+          "Monitoring",
+          "Dependencies",
+          "Project Config"
+        ],
+        "missing_components": 0,
+        "import_test": "PASSED"
+      },
+      "execution_time": 0.09686017036437988,
+      "mission_critical": false
+    }
+  ],
+  "critical_failures": [
+    {
+      "gate_name": "Security Scanning",
+      "category": "SECURITY",
+      "score": -160.0,
+      "details": {
+        "vulnerabilities_found": 13,
+        "files_scanned": 20,
+        "vulnerabilities": [
+          {
+            "file": "comprehensive_quality_gates.py",
+            "pattern": "eval(",
+            "description": "Code injection vulnerability"
+          },
+          {
+            "file": "comprehensive_quality_gates.py",
+            "pattern": "exec(",
+            "description": "Code execution vulnerability"
+          },
+          {
+            "file": "robust_validation_framework.py",
+            "pattern": "eval(",
+            "description": "Code injection vulnerability"
+          },
+          {
+            "file": "robust_validation_framework.py",
+            "pattern": "exec(",
+            "description": "Code execution vulnerability"
+          },
+          {
+            "file": "generation2_simple_validation.py",
+            "pattern": "exec(",
+            "description": "Code execution vulnerability"
+          }
+        ]
+      }
+    },
+    {
+      "gate_name": "Input Validation",
+      "category": "SECURITY",
+      "score": 25.0,
+      "details": {
+        "validation_tests": [
+          "PASSED: Rejected <class 'NoneType'>",
+          "FAILED: Accepted <class 'str'>",
+          "FAILED: Accepted <class 'list'>",
+          "FAILED: Accepted <class 'dict'>"
+        ],
+        "input_validation_score": 25.0
+      }
+    },
+    {
+      "gate_name": "End-to-End Functionality",
+      "category": "INTEGRATION",
+      "score": 50.0,
+      "details": {
+        "workflow_test": "FAILED: 'RandomAgent' object has no attribute 'act'",
+        "component_integration": "SUCCESS"
+      }
+    }
+  ]
+}

@@ -484,3 +484,368 @@ def validate_and_sanitize_action(action: List[float], expected_dims: int = 26) -
     
     sanitized_action = result.get('sanitized_action', action)
     return result['valid'], sanitized_action, result
+
+
+class EnvironmentHealthChecker:
+    """Comprehensive health checker for the Lunar Habitat RL environment."""
+    
+    def __init__(self):
+        self.checks = {}
+        self.results = {}
+        self.warnings = []
+        self.errors = []
+        
+    def run_full_health_check(self, config: str = "nasa_reference", 
+                            crew_size: int = 4, verbose: bool = False) -> Dict[str, Dict[str, Any]]:
+        """Run all health checks and return results.
+        
+        Args:
+            config: Configuration preset to use
+            crew_size: Number of crew members
+            verbose: Include detailed diagnostic information
+            
+        Returns:
+            Dictionary of health check results
+        """
+        self.results = {}
+        self.warnings = []
+        self.errors = []
+        
+        # Core system checks
+        self._check_imports()
+        self._check_configuration(config)
+        self._check_environment_creation(config, crew_size)
+        self._check_basic_functionality(config, crew_size)
+        self._check_agent_compatibility()
+        self._check_memory_usage()
+        self._check_performance()
+        
+        if verbose:
+            self._check_detailed_diagnostics()
+            
+        return self.results
+    
+    def _check_imports(self):
+        """Check that all required modules can be imported."""
+        check_name = "imports"
+        try:
+            # Core lightweight imports
+            from ..environments.lightweight_habitat import LunarHabitatEnv
+            from ..algorithms.lightweight_baselines import get_baseline_agent
+            from ..core.lightweight_config import HabitatConfig
+            from ..core.lightweight_state import HabitatState
+            
+            # Optional heavy imports
+            optional_imports = []
+            try:
+                import numpy
+                optional_imports.append("numpy")
+            except ImportError:
+                pass
+                
+            try:
+                import gymnasium
+                optional_imports.append("gymnasium")
+            except ImportError:
+                pass
+            
+            self.results[check_name] = {
+                'status': 'PASS',
+                'details': f"Core imports successful. Optional: {', '.join(optional_imports) or 'None'}"
+            }
+            
+        except Exception as e:
+            self.results[check_name] = {
+                'status': 'FAIL',
+                'details': f"Import error: {str(e)}"
+            }
+            self.errors.append(f"Import check failed: {e}")
+    
+    def _check_configuration(self, config: str):
+        """Check configuration loading and validation."""
+        check_name = "configuration"
+        try:
+            from ..core.lightweight_config import HabitatConfig
+            
+            # Test loading default config
+            default_config = HabitatConfig()
+            
+            # Test loading named preset if specified
+            if config != "default":
+                preset_config = HabitatConfig.from_preset(config)
+                
+            self.results[check_name] = {
+                'status': 'PASS',
+                'details': f"Configuration '{config}' loaded successfully"
+            }
+            
+        except Exception as e:
+            self.results[check_name] = {
+                'status': 'FAIL',
+                'details': f"Configuration error: {str(e)}"
+            }
+            self.errors.append(f"Configuration check failed: {e}")
+    
+    def _check_environment_creation(self, config: str, crew_size: int):
+        """Check environment creation and basic properties."""
+        check_name = "environment_creation"
+        try:
+            from ..environments.lightweight_habitat import LunarHabitatEnv
+            from ..core.lightweight_config import HabitatConfig
+            
+            # Create environment
+            env_config = HabitatConfig.from_preset(config)
+            env = LunarHabitatEnv(config=env_config, crew_size=crew_size)
+            
+            # Check basic properties
+            obs_space_shape = getattr(env.observation_space, 'shape', None)
+            action_space_shape = getattr(env.action_space, 'shape', None)
+            
+            # Test reset
+            obs, info = env.reset(seed=42)
+            
+            # Clean up
+            env.close()
+            
+            self.results[check_name] = {
+                'status': 'PASS',
+                'details': f"Environment created: obs_shape={obs_space_shape}, action_shape={action_space_shape}"
+            }
+            
+        except Exception as e:
+            self.results[check_name] = {
+                'status': 'FAIL',
+                'details': f"Environment creation error: {str(e)}"
+            }
+            self.errors.append(f"Environment creation check failed: {e}")
+    
+    def _check_basic_functionality(self, config: str, crew_size: int):
+        """Check basic environment functionality."""
+        check_name = "basic_functionality"
+        try:
+            from ..environments.lightweight_habitat import LunarHabitatEnv
+            from ..algorithms.lightweight_baselines import get_baseline_agent
+            from ..core.lightweight_config import HabitatConfig
+            
+            # Create environment
+            env_config = HabitatConfig.from_preset(config)
+            env = LunarHabitatEnv(config=env_config, crew_size=crew_size)
+            agent = get_baseline_agent("heuristic")
+            
+            # Test episode
+            obs, info = env.reset(seed=42)
+            total_reward = 0.0
+            steps = 0
+            
+            for _ in range(10):  # Short test episode
+                action, _ = agent.predict(obs)
+                obs, reward, done, truncated, step_info = env.step(action)
+                total_reward += reward
+                steps += 1
+                
+                if done or truncated:
+                    break
+            
+            env.close()
+            
+            # Check if episode ran without errors
+            if steps > 0:
+                self.results[check_name] = {
+                    'status': 'PASS',
+                    'details': f"Episode completed: {steps} steps, reward={total_reward:.2f}"
+                }
+            else:
+                self.results[check_name] = {
+                    'status': 'WARN',
+                    'details': "Episode ended immediately"
+                }
+                self.warnings.append("Episode ended immediately")
+            
+        except Exception as e:
+            self.results[check_name] = {
+                'status': 'FAIL',
+                'details': f"Functionality error: {str(e)}"
+            }
+            self.errors.append(f"Basic functionality check failed: {e}")
+    
+    def _check_agent_compatibility(self):
+        """Check that all baseline agents work correctly."""
+        check_name = "agent_compatibility"
+        try:
+            from ..algorithms.lightweight_baselines import BASELINE_AGENTS, get_baseline_agent
+            
+            agent_results = []
+            for agent_type in BASELINE_AGENTS.keys():
+                try:
+                    agent = get_baseline_agent(agent_type)
+                    # Test prediction with dummy observation
+                    dummy_obs = [0.5] * 48  # Standard observation size
+                    action, _ = agent.predict(dummy_obs)
+                    agent_results.append(f"{agent_type}: OK")
+                except Exception as e:
+                    agent_results.append(f"{agent_type}: ERROR - {str(e)}")
+                    self.warnings.append(f"Agent {agent_type} failed: {e}")
+            
+            if all("OK" in result for result in agent_results):
+                self.results[check_name] = {
+                    'status': 'PASS',
+                    'details': f"All {len(agent_results)} agents working"
+                }
+            else:
+                failed_agents = [r for r in agent_results if "ERROR" in r]
+                self.results[check_name] = {
+                    'status': 'WARN',
+                    'details': f"{len(failed_agents)} agents failed: {failed_agents}"
+                }
+            
+        except Exception as e:
+            self.results[check_name] = {
+                'status': 'FAIL',
+                'details': f"Agent compatibility error: {str(e)}"
+            }
+            self.errors.append(f"Agent compatibility check failed: {e}")
+    
+    def _check_memory_usage(self):
+        """Check memory usage during basic operations."""
+        check_name = "memory_usage"
+        try:
+            import psutil
+            import os
+            
+            process = psutil.Process(os.getpid())
+            initial_memory = process.memory_info().rss / 1024 / 1024  # MB
+            
+            # Create and use environment briefly
+            from ..environments.lightweight_habitat import LunarHabitatEnv
+            from ..algorithms.lightweight_baselines import get_baseline_agent
+            
+            env = LunarHabitatEnv()
+            agent = get_baseline_agent("random")
+            
+            obs, info = env.reset()
+            for _ in range(50):
+                action, _ = agent.predict(obs)
+                obs, reward, done, truncated, step_info = env.step(action)
+                if done or truncated:
+                    break
+            
+            env.close()
+            
+            final_memory = process.memory_info().rss / 1024 / 1024  # MB
+            memory_increase = final_memory - initial_memory
+            
+            if memory_increase < 50:  # Less than 50MB increase
+                self.results[check_name] = {
+                    'status': 'PASS',
+                    'details': f"Memory usage: {initial_memory:.1f}MB -> {final_memory:.1f}MB (+{memory_increase:.1f}MB)"
+                }
+            else:
+                self.results[check_name] = {
+                    'status': 'WARN',
+                    'details': f"High memory usage: +{memory_increase:.1f}MB"
+                }
+                self.warnings.append(f"High memory usage detected: {memory_increase:.1f}MB")
+            
+        except ImportError:
+            self.results[check_name] = {
+                'status': 'SKIP',
+                'details': "psutil not available for memory monitoring"
+            }
+        except Exception as e:
+            self.results[check_name] = {
+                'status': 'FAIL',
+                'details': f"Memory check error: {str(e)}"
+            }
+    
+    def _check_performance(self):
+        """Check basic performance metrics."""
+        check_name = "performance"
+        try:
+            from ..environments.lightweight_habitat import LunarHabitatEnv
+            from ..algorithms.lightweight_baselines import get_baseline_agent
+            
+            # Time environment operations
+            start_time = time.time()
+            
+            env = LunarHabitatEnv()
+            agent = get_baseline_agent("heuristic")
+            
+            obs, info = env.reset()
+            
+            # Time step execution
+            step_times = []
+            for _ in range(20):
+                step_start = time.time()
+                action, _ = agent.predict(obs)
+                obs, reward, done, truncated, step_info = env.step(action)
+                step_times.append(time.time() - step_start)
+                
+                if done or truncated:
+                    break
+            
+            env.close()
+            
+            total_time = time.time() - start_time
+            avg_step_time = sum(step_times) / len(step_times) if step_times else 0
+            
+            if avg_step_time < 0.01:  # Less than 10ms per step
+                self.results[check_name] = {
+                    'status': 'PASS',
+                    'details': f"Performance good: {avg_step_time*1000:.1f}ms/step, total: {total_time:.2f}s"
+                }
+            elif avg_step_time < 0.1:  # Less than 100ms per step
+                self.results[check_name] = {
+                    'status': 'WARN',
+                    'details': f"Performance acceptable: {avg_step_time*1000:.1f}ms/step"
+                }
+                self.warnings.append("Performance is slower than optimal")
+            else:
+                self.results[check_name] = {
+                    'status': 'FAIL',
+                    'details': f"Performance poor: {avg_step_time*1000:.1f}ms/step"
+                }
+                self.errors.append("Performance is unacceptably slow")
+            
+        except Exception as e:
+            self.results[check_name] = {
+                'status': 'FAIL',
+                'details': f"Performance check error: {str(e)}"
+            }
+    
+    def _check_detailed_diagnostics(self):
+        """Run detailed diagnostic checks."""
+        check_name = "detailed_diagnostics"
+        try:
+            diagnostics = []
+            
+            # Check state space details
+            from ..environments.lightweight_habitat import LunarHabitatEnv
+            from ..core.lightweight_state import HabitatState
+            
+            env = LunarHabitatEnv()
+            obs, info = env.reset()
+            
+            diagnostics.append(f"Observation size: {len(obs)}")
+            diagnostics.append(f"Info keys: {list(info.keys())}")
+            
+            # Check state components
+            state = HabitatState()
+            state_info = state.get_observation_space_info()
+            diagnostics.append(f"State components: {list(state_info['component_ranges'].keys())}")
+            
+            # Check action space
+            action = env.action_space.sample()
+            diagnostics.append(f"Action size: {len(action)}")
+            
+            env.close()
+            
+            self.results[check_name] = {
+                'status': 'PASS',
+                'details': "; ".join(diagnostics)
+            }
+            
+        except Exception as e:
+            self.results[check_name] = {
+                'status': 'FAIL',
+                'details': f"Diagnostics error: {str(e)}"
+            }

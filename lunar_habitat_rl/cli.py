@@ -10,9 +10,22 @@ from typing import Optional, List
 import json
 import time
 
-from .environments import make_lunar_env, LunarHabitatEnv
-from .algorithms import RandomAgent, HeuristicAgent
-from .core import HabitatConfig
+# Try imports with fallbacks for lightweight mode
+try:
+    from .environments import make_lunar_env, LunarHabitatEnv
+except ImportError:
+    from .environments.lightweight_habitat import make_lunar_env, LunarHabitatEnv
+
+try:
+    from .algorithms import RandomAgent, HeuristicAgent
+except ImportError:
+    from .algorithms.lightweight_baselines import RandomAgent, HeuristicAgent
+
+try:
+    from .core import HabitatConfig
+except ImportError:
+    from .core.lightweight_config import HabitatConfig
+
 from .utils import setup_logging, get_logger
 
 app = typer.Typer(help="🌙 Lunar Habitat RL Suite - NASA TRL 6 Reinforcement Learning Environment")
@@ -372,6 +385,162 @@ def validate_config(
         raise typer.Exit(1)
 
 
+@app.command()
+def health_check(
+    config: str = typer.Option("nasa_reference", help="Configuration to validate"),
+    crew_size: int = typer.Option(4, help="Number of crew members"),
+    verbose: bool = typer.Option(False, help="Detailed health check output")
+):
+    """Perform comprehensive health check of the habitat environment."""
+    console.print("🏥 [bold blue]Running Habitat Health Check[/bold blue]\n")
+    
+    from .utils.robust_validation import EnvironmentHealthChecker
+    
+    try:
+        # Initialize health checker
+        health_checker = EnvironmentHealthChecker()
+        
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Running health checks...", total=None)
+            
+            # Run health checks
+            results = health_checker.run_full_health_check(
+                config=config,
+                crew_size=crew_size,
+                verbose=verbose
+            )
+            
+            progress.update(task, description="Health check completed!")
+        
+        # Display results
+        health_table = Table(title="Health Check Results")
+        health_table.add_column("Component", style="cyan")
+        health_table.add_column("Status", style="white")
+        health_table.add_column("Details", style="white")
+        
+        for component, result in results.items():
+            status_style = "green" if result['status'] == 'PASS' else "red" if result['status'] == 'FAIL' else "yellow"
+            health_table.add_row(
+                component.title(),
+                f"[{status_style}]{result['status']}[/{status_style}]",
+                result.get('details', 'N/A')
+            )
+        
+        console.print(health_table)
+        
+        # Overall status
+        failed_checks = [c for c, r in results.items() if r['status'] == 'FAIL']
+        if failed_checks:
+            console.print(f"\n❌ [red]Health check failed[/red] - {len(failed_checks)} component(s) failed")
+            console.print(f"Failed components: {', '.join(failed_checks)}")
+            raise typer.Exit(1)
+        else:
+            console.print("\n✅ [green]All health checks passed![/green]")
+            
+    except Exception as e:
+        console.print(f"❌ Health check failed with error: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def quick_test(
+    config: str = typer.Option("nasa_reference", help="Environment configuration"),
+    episodes: int = typer.Option(5, help="Number of test episodes"),
+    agent: str = typer.Option("heuristic", help="Agent type to test"),
+    seed: int = typer.Option(42, help="Random seed for reproducibility")
+):
+    """Quick test of environment with a baseline agent."""
+    console.print(f"🚀 [bold blue]Quick Test - {agent} agent for {episodes} episodes[/bold blue]\n")
+    
+    try:
+        from .algorithms.lightweight_baselines import get_baseline_agent
+        from .environments.lightweight_habitat import LunarHabitatEnv
+        
+        # Create environment and agent
+        env = LunarHabitatEnv(crew_size=4)
+        test_agent = get_baseline_agent(agent)
+        
+        results = []
+        
+        with Progress(console=console) as progress:
+            task = progress.add_task(f"Running {agent} test...", total=episodes)
+            
+            for episode in range(episodes):
+                obs, info = env.reset(seed=seed + episode)
+                episode_reward = 0.0
+                episode_length = 0
+                done = False
+                truncated = False
+                
+                while not (done or truncated):
+                    action, _ = test_agent.predict(obs)
+                    obs, reward, done, truncated, step_info = env.step(action)
+                    episode_reward += reward
+                    episode_length += 1
+                    
+                    if episode_length > 1000:  # Safety limit
+                        truncated = True
+                
+                results.append({
+                    'episode': episode,
+                    'reward': episode_reward,
+                    'length': episode_length,
+                    'status': step_info.get('status', 'unknown')
+                })
+                
+                progress.update(task, advance=1)
+        
+        env.close()
+        
+        # Display results
+        test_table = Table(title="Quick Test Results")
+        test_table.add_column("Episode", style="cyan")
+        test_table.add_column("Reward", style="white")
+        test_table.add_column("Length", style="white")
+        test_table.add_column("Status", style="white")
+        
+        for result in results:
+            status_style = "green" if result['status'] == 'nominal' else "yellow" if result['status'] in ['caution', 'warning'] else "red"
+            test_table.add_row(
+                str(result['episode']),
+                f"{result['reward']:.2f}",
+                str(result['length']),
+                f"[{status_style}]{result['status']}[/{status_style}]"
+            )
+        
+        console.print(test_table)
+        
+        # Summary statistics
+        avg_reward = sum(r['reward'] for r in results) / len(results)
+        avg_length = sum(r['length'] for r in results) / len(results)
+        success_rate = len([r for r in results if r['status'] == 'nominal']) / len(results) * 100
+        
+        summary_table = Table(title="Summary Statistics")
+        summary_table.add_column("Metric", style="cyan")
+        summary_table.add_column("Value", style="white")
+        
+        summary_table.add_row("Average Reward", f"{avg_reward:.2f}")
+        summary_table.add_row("Average Length", f"{avg_length:.1f}")
+        summary_table.add_row("Success Rate", f"{success_rate:.1f}%")
+        
+        console.print(summary_table)
+        
+        if success_rate >= 80:
+            console.print("\n✅ [green]Test passed - Environment is functioning well![/green]")
+        elif success_rate >= 60:
+            console.print("\n⚠️  [yellow]Test passed with warnings - Some issues detected[/yellow]")
+        else:
+            console.print("\n❌ [red]Test failed - Significant issues detected[/red]")
+            
+    except Exception as e:
+        console.print(f"❌ Quick test failed: {e}")
+        raise typer.Exit(1)
+
+
 @app.command()  
 def train(
     algorithm: str = typer.Option("random", help="Training algorithm"),
@@ -440,6 +609,174 @@ def train(
     
     console.print(results_table)
     console.print(f"✅ Model saved to: {model_path}")
+
+
+@app.command()
+def demo(
+    scenario: str = typer.Option("emergency", help="Demo scenario to run"),
+    duration: int = typer.Option(100, help="Number of steps to run"),
+    agent: str = typer.Option("heuristic", help="Agent to use for demo")
+):
+    """Run an interactive demo of the habitat environment."""
+    console.print(f"🎪 [bold blue]Habitat Demo - {scenario} scenario[/bold blue]\n")
+    
+    try:
+        from .algorithms.lightweight_baselines import get_baseline_agent
+        from .environments.lightweight_habitat import LunarHabitatEnv
+        
+        # Create environment and agent
+        env = LunarHabitatEnv()
+        demo_agent = get_baseline_agent(agent)
+        
+        obs, info = env.reset(seed=42)
+        
+        # Demo state tracking
+        step_data = []
+        
+        console.print("🏁 Starting demo...\n")
+        
+        for step in range(duration):
+            # Get agent action
+            action, _ = demo_agent.predict(obs)
+            
+            # Execute step
+            obs, reward, done, truncated, step_info = env.step(action)
+            
+            # Store step data
+            step_data.append({
+                'step': step,
+                'reward': reward,
+                'status': step_info.get('status', 'unknown'),
+                'o2_pressure': obs[0] if len(obs) > 0 else 0,
+                'co2_pressure': obs[1] if len(obs) > 1 else 0,
+                'battery_charge': obs[8] if len(obs) > 8 else 0
+            })
+            
+            # Display periodic updates
+            if step % 20 == 0 or done or truncated:
+                status_style = "green" if step_info.get('status') == 'nominal' else "yellow" if step_info.get('status') in ['caution', 'warning'] else "red"
+                console.print(
+                    f"Step {step:3d}: "
+                    f"O₂: {obs[0]:.1f} kPa, "
+                    f"CO₂: {obs[1]:.1f} kPa, "
+                    f"Battery: {obs[8]:.1f}%, "
+                    f"Status: [{status_style}]{step_info.get('status', 'unknown')}[/{status_style}], "
+                    f"Reward: {reward:.2f}"
+                )
+            
+            if done or truncated:
+                break
+        
+        env.close()
+        
+        # Demo summary
+        console.print("\n📊 [bold]Demo Summary[/bold]")
+        
+        summary_table = Table(title="Final State")
+        summary_table.add_column("Parameter", style="cyan")
+        summary_table.add_column("Value", style="white")
+        
+        final_data = step_data[-1] if step_data else {}
+        summary_table.add_row("Steps Completed", str(len(step_data)))
+        summary_table.add_row("Final Status", final_data.get('status', 'unknown'))
+        summary_table.add_row("Total Reward", f"{sum(s['reward'] for s in step_data):.2f}")
+        summary_table.add_row("Final O₂ Pressure", f"{final_data.get('o2_pressure', 0):.1f} kPa")
+        summary_table.add_row("Final CO₂ Pressure", f"{final_data.get('co2_pressure', 0):.1f} kPa")
+        summary_table.add_row("Final Battery", f"{final_data.get('battery_charge', 0):.1f}%")
+        
+        console.print(summary_table)
+        
+        if done:
+            console.print("\n🚨 [red]Demo ended due to critical failure![/red]")
+        elif final_data.get('status') == 'nominal':
+            console.print("\n✅ [green]Demo completed successfully![/green]")
+        else:
+            console.print("\n⚠️  [yellow]Demo completed with warnings[/yellow]")
+            
+    except Exception as e:
+        console.print(f"❌ Demo failed: {e}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def list_agents():
+    """List all available baseline agents."""
+    console.print("🤖 [bold blue]Available Baseline Agents[/bold blue]\n")
+    
+    try:
+        from .algorithms.lightweight_baselines import BASELINE_AGENTS
+        
+        agents_table = Table(title="Baseline Agents")
+        agents_table.add_column("Agent Type", style="cyan")
+        agents_table.add_column("Description", style="white")
+        agents_table.add_column("Use Case", style="green")
+        
+        agent_descriptions = {
+            'random': ('Random action selection', 'Baseline comparison, environment testing'),
+            'heuristic': ('Rule-based control logic', 'Practical baseline, demonstration'),
+            'pid': ('PID controller-based', 'Precise control, engineering validation'),
+            'greedy': ('Greedy action selection', 'Short-term optimization')
+        }
+        
+        for agent_type in BASELINE_AGENTS.keys():
+            desc, use_case = agent_descriptions.get(agent_type, ('Unknown', 'Unknown'))
+            agents_table.add_row(agent_type, desc, use_case)
+        
+        console.print(agents_table)
+        
+    except Exception as e:
+        console.print(f"❌ Failed to list agents: {e}")
+
+
+@app.command()
+def system_info():
+    """Display system information and dependencies."""
+    console.print("💻 [bold blue]System Information[/bold blue]\n")
+    
+    import sys
+    import platform
+    
+    system_table = Table(title="System Details")
+    system_table.add_column("Component", style="cyan")
+    system_table.add_column("Value", style="white")
+    
+    system_table.add_row("Python Version", f"{sys.version.split()[0]}")
+    system_table.add_row("Platform", platform.platform())
+    system_table.add_row("Architecture", platform.machine())
+    system_table.add_row("Processor", platform.processor() or "Unknown")
+    
+    console.print(system_table)
+    
+    # Check for optional dependencies
+    console.print("\n📦 [bold blue]Dependency Status[/bold blue]")
+    
+    deps_table = Table(title="Dependencies")
+    deps_table.add_column("Package", style="cyan")
+    deps_table.add_column("Status", style="white")
+    deps_table.add_column("Notes", style="white")
+    
+    # Check common dependencies
+    dependencies = [
+        ('numpy', 'Core numerical operations'),
+        ('gymnasium', 'RL environment interface'),
+        ('stable-baselines3', 'RL algorithms'),
+        ('torch', 'Deep learning'),
+        ('matplotlib', 'Plotting and visualization'),
+        ('scipy', 'Scientific computing')
+    ]
+    
+    for dep_name, description in dependencies:
+        try:
+            __import__(dep_name)
+            status = "[green]✓ Available[/green]"
+        except ImportError:
+            status = "[yellow]✗ Not installed[/yellow]"
+        
+        deps_table.add_row(dep_name, status, description)
+    
+    console.print(deps_table)
+    
+    console.print("\n💡 [italic]Note: Lunar Habitat RL Suite can run in lightweight mode without heavy dependencies[/italic]")
 
 
 if __name__ == "__main__":

@@ -47,6 +47,310 @@ class HealthStatus:
     alerts: List[str]
     metrics: SystemMetrics
     uptime_seconds: float
+
+
+class SimpleSystemMonitor:
+    """Lightweight system monitor for Generation 1 - works without heavy dependencies."""
+    
+    def __init__(self):
+        self.start_time = time.time()
+        self.metrics_history = deque(maxlen=1000)
+        self.alerts = []
+        self.logger = get_logger()
+        
+    def get_basic_metrics(self) -> Dict[str, Any]:
+        """Get basic system metrics without psutil."""
+        import os
+        
+        metrics = {
+            'timestamp': time.time(),
+            'uptime_seconds': time.time() - self.start_time,
+            'process_id': os.getpid(),
+            'python_version': f"{os.sys.version_info.major}.{os.sys.version_info.minor}"
+        }
+        
+        # Try to get memory info from /proc/meminfo on Linux
+        try:
+            with open('/proc/meminfo', 'r') as f:
+                meminfo = f.read()
+                for line in meminfo.split('\n'):
+                    if 'MemTotal:' in line:
+                        total_kb = int(line.split()[1])
+                        metrics['total_memory_gb'] = total_kb / 1024 / 1024
+                    elif 'MemAvailable:' in line:
+                        available_kb = int(line.split()[1])
+                        metrics['available_memory_gb'] = available_kb / 1024 / 1024
+                        if 'total_memory_gb' in metrics:
+                            metrics['memory_usage_percent'] = (1 - available_kb/total_kb) * 100
+        except (FileNotFoundError, PermissionError, ValueError):
+            # Fallback for non-Linux systems or when /proc is not available
+            metrics['memory_info'] = 'unavailable'
+        
+        return metrics
+    
+    def get_environment_metrics(self, env) -> Dict[str, Any]:
+        """Get environment-specific metrics."""
+        try:
+            metrics = {
+                'environment_type': type(env).__name__,
+                'observation_space_shape': getattr(env.observation_space, 'shape', None),
+                'action_space_shape': getattr(env.action_space, 'shape', None),
+                'current_step': getattr(env, 'current_step', 0),
+                'max_steps': getattr(env, 'max_steps', 0),
+                'episode_reward': getattr(env, 'episode_reward', 0)
+            }
+            
+            # Try to get state information
+            if hasattr(env, 'state'):
+                state = env.state
+                if hasattr(state, 'atmosphere'):
+                    metrics['o2_pressure'] = getattr(state.atmosphere, 'o2_partial_pressure', 0)
+                    metrics['co2_pressure'] = getattr(state.atmosphere, 'co2_partial_pressure', 0)
+                    metrics['temperature'] = getattr(state.atmosphere, 'temperature', 0)
+                
+                if hasattr(state, 'power'):
+                    metrics['battery_charge'] = getattr(state.power, 'battery_charge', 0)
+                    metrics['power_generation'] = getattr(state.power, 'solar_generation', 0)
+            
+            return metrics
+            
+        except Exception as e:
+            self.logger.warning(f"Failed to get environment metrics: {e}")
+            return {'error': str(e)}
+    
+    def check_system_health(self) -> Dict[str, Any]:
+        """Perform basic system health check."""
+        health_status = {
+            'status': 'healthy',
+            'alerts': [],
+            'timestamp': time.time(),
+            'uptime_hours': (time.time() - self.start_time) / 3600
+        }
+        
+        # Get basic metrics
+        metrics = self.get_basic_metrics()
+        
+        # Check memory usage
+        if 'memory_usage_percent' in metrics:
+            if metrics['memory_usage_percent'] > 90:
+                health_status['alerts'].append('High memory usage')
+                health_status['status'] = 'warning'
+            elif metrics['memory_usage_percent'] > 95:
+                health_status['alerts'].append('Critical memory usage')
+                health_status['status'] = 'critical'
+        
+        # Check uptime
+        if health_status['uptime_hours'] > 24:
+            health_status['alerts'].append('Long running session - consider restart')
+        
+        # Check for recent errors in logs
+        error_count = len([alert for alert in self.alerts if 'error' in alert.lower()])
+        if error_count > 10:
+            health_status['alerts'].append(f'High error count: {error_count}')
+            health_status['status'] = 'warning'
+        
+        health_status['metrics'] = metrics
+        
+        return health_status
+    
+    def log_alert(self, alert_message: str, severity: str = 'info'):
+        """Log an alert message."""
+        alert = {
+            'timestamp': time.time(),
+            'message': alert_message,
+            'severity': severity
+        }
+        
+        self.alerts.append(alert)
+        
+        # Keep only last 100 alerts
+        if len(self.alerts) > 100:
+            self.alerts = self.alerts[-100:]
+        
+        # Log to logger
+        if severity == 'critical':
+            self.logger.critical(alert_message)
+        elif severity == 'warning':
+            self.logger.warning(alert_message)
+        elif severity == 'error':
+            self.logger.error(alert_message)
+        else:
+            self.logger.info(alert_message)
+    
+    def get_recent_alerts(self, hours: float = 1.0) -> List[Dict[str, Any]]:
+        """Get alerts from the last N hours."""
+        cutoff_time = time.time() - (hours * 3600)
+        return [alert for alert in self.alerts if alert['timestamp'] >= cutoff_time]
+
+
+class PerformanceTracker:
+    """Track performance metrics for training and evaluation."""
+    
+    def __init__(self):
+        self.session_start = time.time()
+        self.episode_data = []
+        self.step_data = deque(maxlen=10000)  # Keep last 10k steps
+        self.logger = get_logger()
+        
+    def record_episode(self, episode_num: int, reward: float, length: int, 
+                      status: str = 'completed', **kwargs):
+        """Record episode completion."""
+        episode_data = {
+            'episode': episode_num,
+            'reward': reward,
+            'length': length,
+            'status': status,
+            'timestamp': time.time(),
+            'session_time': time.time() - self.session_start,
+            **kwargs
+        }
+        
+        self.episode_data.append(episode_data)
+        
+        # Log milestone episodes
+        if episode_num % 100 == 0:
+            recent_rewards = [ep['reward'] for ep in self.episode_data[-10:]]
+            avg_reward = sum(recent_rewards) / len(recent_rewards) if recent_rewards else 0
+            self.logger.info(f"Episode {episode_num}: avg reward (last 10): {avg_reward:.2f}")
+    
+    def record_step(self, step_time: float, reward: float, action_valid: bool = True):
+        """Record individual step performance."""
+        step_data = {
+            'step_time': step_time,
+            'reward': reward,
+            'action_valid': action_valid,
+            'timestamp': time.time()
+        }
+        
+        self.step_data.append(step_data)
+    
+    def get_performance_summary(self, last_n_episodes: int = 100) -> Dict[str, Any]:
+        """Get performance summary."""
+        if not self.episode_data:
+            return {'error': 'No episode data available'}
+        
+        recent_episodes = self.episode_data[-last_n_episodes:]
+        rewards = [ep['reward'] for ep in recent_episodes]
+        lengths = [ep['length'] for ep in recent_episodes]
+        
+        # Calculate statistics
+        summary = {
+            'total_episodes': len(self.episode_data),
+            'recent_episodes': len(recent_episodes),
+            'session_time_hours': (time.time() - self.session_start) / 3600,
+            'avg_reward': sum(rewards) / len(rewards),
+            'reward_std': self._calculate_std(rewards),
+            'min_reward': min(rewards),
+            'max_reward': max(rewards),
+            'avg_episode_length': sum(lengths) / len(lengths),
+            'success_rate': len([ep for ep in recent_episodes if ep['status'] == 'completed']) / len(recent_episodes),
+            'episodes_per_hour': len(self.episode_data) / ((time.time() - self.session_start) / 3600)
+        }
+        
+        # Step performance
+        if self.step_data:
+            recent_steps = list(self.step_data)[-1000:]  # Last 1000 steps
+            step_times = [s['step_time'] for s in recent_steps]
+            summary['avg_step_time_ms'] = sum(step_times) / len(step_times) * 1000
+            summary['steps_per_second'] = 1.0 / (sum(step_times) / len(step_times))
+            summary['action_validity_rate'] = len([s for s in recent_steps if s['action_valid']]) / len(recent_steps)
+        
+        return summary
+    
+    def _calculate_std(self, values: List[float]) -> float:
+        """Calculate standard deviation."""
+        if len(values) <= 1:
+            return 0.0
+        
+        mean = sum(values) / len(values)
+        variance = sum((x - mean) ** 2 for x in values) / (len(values) - 1)
+        return variance ** 0.5
+    
+    def save_performance_data(self, filepath: str):
+        """Save performance data to file."""
+        data = {
+            'session_start': self.session_start,
+            'episode_data': self.episode_data,
+            'step_data': list(self.step_data),
+            'summary': self.get_performance_summary(),
+            'saved_at': time.time()
+        }
+        
+        with open(filepath, 'w') as f:
+            json.dump(data, f, indent=2)
+
+
+class SimpleHealthDashboard:
+    """Simple text-based health dashboard."""
+    
+    def __init__(self, monitor: SimpleSystemMonitor, tracker: PerformanceTracker):
+        self.monitor = monitor
+        self.tracker = tracker
+        
+    def print_status_report(self):
+        """Print a comprehensive status report."""
+        print("\n" + "="*60)
+        print("LUNAR HABITAT RL - SYSTEM STATUS REPORT")
+        print("="*60)
+        
+        # System health
+        health = self.monitor.check_system_health()
+        print(f"\nSystem Status: {health['status'].upper()}")
+        print(f"Uptime: {health['uptime_hours']:.1f} hours")
+        
+        if health['alerts']:
+            print("\nAlerts:")
+            for alert in health['alerts']:
+                print(f"  - {alert}")
+        
+        # System metrics
+        metrics = health['metrics']
+        print(f"\nSystem Metrics:")
+        print(f"  Process ID: {metrics.get('process_id', 'N/A')}")
+        print(f"  Python: {metrics.get('python_version', 'N/A')}")
+        
+        if 'memory_usage_percent' in metrics:
+            print(f"  Memory Usage: {metrics['memory_usage_percent']:.1f}%")
+            print(f"  Available Memory: {metrics.get('available_memory_gb', 0):.2f} GB")
+        
+        # Performance summary
+        perf_summary = self.tracker.get_performance_summary()
+        if 'error' not in perf_summary:
+            print(f"\nPerformance Summary:")
+            print(f"  Total Episodes: {perf_summary['total_episodes']}")
+            print(f"  Session Time: {perf_summary['session_time_hours']:.2f} hours")
+            print(f"  Average Reward: {perf_summary['avg_reward']:.2f} ± {perf_summary['reward_std']:.2f}")
+            print(f"  Success Rate: {perf_summary['success_rate']*100:.1f}%")
+            print(f"  Episodes/Hour: {perf_summary['episodes_per_hour']:.1f}")
+            
+            if 'avg_step_time_ms' in perf_summary:
+                print(f"  Avg Step Time: {perf_summary['avg_step_time_ms']:.2f} ms")
+                print(f"  Steps/Second: {perf_summary['steps_per_second']:.1f}")
+        
+        # Recent alerts
+        recent_alerts = self.monitor.get_recent_alerts(hours=1.0)
+        if recent_alerts:
+            print(f"\nRecent Alerts (last hour): {len(recent_alerts)}")
+            for alert in recent_alerts[-5:]:  # Show last 5
+                timestamp = datetime.fromtimestamp(alert['timestamp']).strftime('%H:%M:%S')
+                print(f"  {timestamp} [{alert['severity']}]: {alert['message']}")
+        
+        print("\n" + "="*60)
+    
+    def print_environment_status(self, env):
+        """Print environment-specific status."""
+        env_metrics = self.monitor.get_environment_metrics(env)
+        
+        print("\nEnvironment Status:")
+        print(f"  Type: {env_metrics.get('environment_type', 'Unknown')}")
+        print(f"  Current Step: {env_metrics.get('current_step', 0)}/{env_metrics.get('max_steps', 0)}")
+        print(f"  Episode Reward: {env_metrics.get('episode_reward', 0):.2f}")
+        
+        if 'o2_pressure' in env_metrics:
+            print(f"  O2 Pressure: {env_metrics['o2_pressure']:.1f} kPa")
+            print(f"  CO2 Pressure: {env_metrics['co2_pressure']:.2f} kPa")
+            print(f"  Temperature: {env_metrics['temperature']:.1f} °C")
+            print(f"  Battery: {env_metrics.get('battery_charge', 0):.1f}%")
     
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
