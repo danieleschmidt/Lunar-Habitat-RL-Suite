@@ -7,13 +7,13 @@
     },
     "security": {
       "status": "PARTIAL",
-      "score": 30,
-      "details": "7 vulnerabilities remain: ['robust_validation_framework.py: eval(', 'robust_validation_framework.py: exec(', 'simple_quality_gates_validation.py: eval(']"
+      "score": 0,
+      "details": "10 vulnerabilities remain: ['robust_validation_framework.py: eval(', 'robust_validation_framework.py: exec(', 'simple_quality_gates_validation.py: eval(']"
     },
     "performance": {
       "status": "PASS",
       "score": 100,
-      "details": "Performance excellent: 18159.5 eps/sec"
+      "details": "Performance excellent: 20033.9 eps/sec"
     },
     "nasa_compliance": {
       "status": "FAIL",
@@ -22,7 +22,7 @@
     }
   },
   "mission_readiness": {
-    "overall_score": 59.0,
+    "overall_score": 50.0,
     "mission_readiness": "NOT READY",
     "certification_level": "PROTOTYPE",
     "nasa_approved": false

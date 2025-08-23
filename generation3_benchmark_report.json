@@ -1,19 +1,19 @@
 {
-  "timestamp": 1755723634.7597804,
-  "execution_time": 11.262908458709717,
+  "timestamp": 1755957941.1893978,
+  "execution_time": 11.250408172607422,
   "summary": {
     "total_benchmarks": 10,
     "successful_benchmarks": 9,
     "success_rate": 0.9,
-    "average_throughput": 269892.20582249144,
+    "average_throughput": 310947.488578892,
     "total_memory_usage_mb": 0.0
   },
   "detailed_results": {
     "caching_performance": {
       "name": "caching_performance",
       "success": true,
-      "execution_time": 5.502139091491699,
-      "throughput": 908.737477707863,
+      "execution_time": 5.501647233963013,
+      "throughput": 908.8187205340572,
       "memory_usage_mb": 0.0,
       "cpu_usage": 0.0,
       "error_message": null,
@@ -26,8 +26,8 @@
     "autoscaling_efficiency": {
       "name": "autoscaling_efficiency",
       "success": true,
-      "execution_time": 0.10045742988586426,
-      "throughput": 199.0893060147289,
+      "execution_time": 0.10051083564758301,
+      "throughput": 198.98352124068666,
       "memory_usage_mb": 0.0,
       "cpu_usage": 0.0,
       "error_message": null,
@@ -38,8 +38,8 @@
     "environment_pool_performance": {
       "name": "environment_pool_performance",
       "success": true,
-      "execution_time": 0.0004096031188964844,
-      "throughput": 244138.76600698486,
+      "execution_time": 0.0003609657287597656,
+      "throughput": 277034.61030383094,
       "memory_usage_mb": 0.0,
       "cpu_usage": 0.0,
       "error_message": null,
@@ -50,52 +50,52 @@
     "single_threaded_throughput": {
       "name": "single_threaded_throughput",
       "success": true,
-      "execution_time": 0.001379251480102539,
-      "throughput": 20604.75535468658,
+      "execution_time": 0.0011878013610839844,
+      "throughput": 24323.266063558338,
       "memory_usage_mb": 0.0,
       "cpu_usage": 0.0,
       "error_message": null,
       "metadata": {
         "episodes": 25,
         "steps": 25,
-        "avg_episode_time": 4.773139953613281e-05,
-        "steps_per_second": 20604.75535468658
+        "avg_episode_time": 4.0521621704101564e-05,
+        "steps_per_second": 24323.266063558338
       }
     },
     "parallel_processing_efficiency": {
       "name": "parallel_processing_efficiency",
       "success": true,
-      "execution_time": 0.00595855712890625,
-      "throughput": 4360.345974717232,
+      "execution_time": 0.004736661911010742,
+      "throughput": 5515.9179379274065,
       "memory_usage_mb": 0.0,
       "cpu_usage": 0.0,
       "error_message": null,
       "metadata": {
         "episodes": 25,
         "steps": 25,
-        "parallel_efficiency": 109.0086493679308,
+        "parallel_efficiency": 137.89794844818516,
         "workers": 4
       }
     },
     "memory_optimization": {
       "name": "memory_optimization",
       "success": true,
-      "execution_time": 0.014008283615112305,
-      "throughput": 1099706.4610671431,
+      "execution_time": 0.010927200317382812,
+      "throughput": 1409967.7458544248,
       "memory_usage_mb": 0.0,
       "cpu_usage": 0.0,
       "error_message": null,
       "metadata": {
         "objects_collected": 0,
-        "initial_objects": 15405,
-        "final_objects": 15259
+        "initial_objects": 15407,
+        "final_objects": 15260
       }
     },
     "concurrent_execution": {
       "name": "concurrent_execution",
       "success": true,
-      "execution_time": 0.022046327590942383,
-      "throughput": 4535.90284311499,
+      "execution_time": 0.016825199127197266,
+      "throughput": 5943.466062066033,
       "memory_usage_mb": 0.0,
       "cpu_usage": 0.0,
       "error_message": null,
@@ -109,8 +109,8 @@
     "system_scalability": {
       "name": "system_scalability",
       "success": false,
-      "execution_time": 0.007154703140258789,
-      "throughput": 312496.8389921813,
+      "execution_time": 0.00635981559753418,
+      "throughput": 333938.8312178365,
       "memory_usage_mb": 0.0,
       "cpu_usage": 0.0,
       "error_message": null,
@@ -122,19 +122,19 @@
           200
         ],
         "performance_at_load": [
-          855980.4081632653,
-          277034.61030383094,
-          81332.24743067675,
-          35640.090070952116
+          932067.5555555555,
+          270949.87080103357,
+          92589.49227373069,
+          40148.40624102613
         ],
-        "degradation_ratio": 0.04163657220546373
+        "degradation_ratio": 0.043074566861299894
       }
     },
     "database_performance": {
       "name": "database_performance",
       "success": true,
-      "execution_time": 0.0011370182037353516,
-      "throughput": 1011417.4040679388,
+      "execution_time": 0.0010941028594970703,
+      "throughput": 1051089.4748311178,
       "memory_usage_mb": 0.0,
       "cpu_usage": 0.0,
       "error_message": null,
@@ -148,8 +148,8 @@
     "integrated_performance": {
       "name": "integrated_performance",
       "success": true,
-      "execution_time": 5.603979825973511,
-      "throughput": 553.7571344244617,
+      "execution_time": 5.60333251953125,
+      "throughput": 553.7712763836678,
       "memory_usage_mb": 0.0,
       "cpu_usage": 0.0,
       "error_message": null,
