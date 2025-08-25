@@ -1,0 +1,18 @@
+{
+  "system_status": "系统状态",
+  "algorithm_running": "算法运行中",
+  "emergency_mode": "紧急模式",
+  "crew_safety_critical": "船员安全关键",
+  "oxygen_level": "氧气水平",
+  "co2_level": "二氧化碳水平",
+  "power_status": "电力状态",
+  "temperature": "温度",
+  "mission_day": "任务日",
+  "algorithm_performance": "算法性能",
+  "resource_efficiency": "资源效率",
+  "safety_compliance": "安全合规",
+  "error_critical": "严重错误",
+  "warning_attention": "需要注意",
+  "info_normal": "正常操作",
+  "success_optimal": "最佳性能"
+}

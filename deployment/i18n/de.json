@@ -1,11 +1,18 @@
 {
-  "locale": "de",
-  "name": "Deutsch",
-  "region_preferences": [
-    "eu-west-1"
-  ],
-  "compliance": [
-    "GDPR",
-    "SOC2"
-  ]
+  "system_status": "Systemstatus",
+  "algorithm_running": "Algorithmus läuft",
+  "emergency_mode": "Notfallmodus",
+  "crew_safety_critical": "Besatzungssicherheit kritisch",
+  "oxygen_level": "Sauerstofflevel",
+  "co2_level": "CO2-Level",
+  "power_status": "Stromstatus",
+  "temperature": "Temperatur",
+  "mission_day": "Missionstag",
+  "algorithm_performance": "Algorithmus-Leistung",
+  "resource_efficiency": "Ressourceneffizienz",
+  "safety_compliance": "Sicherheitskonformität",
+  "error_critical": "Kritischer Fehler",
+  "warning_attention": "Aufmerksamkeit erforderlich",
+  "info_normal": "Normaler Betrieb",
+  "success_optimal": "Optimale Leistung"
 }
