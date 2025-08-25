@@ -1,11 +1,18 @@
 {
-  "locale": "ja",
-  "name": "日本語",
-  "region_preferences": [
-    "ap-southeast-1"
-  ],
-  "compliance": [
-    "PDPA",
-    "SOC2"
-  ]
+  "system_status": "システム状態",
+  "algorithm_running": "アルゴリズム実行中",
+  "emergency_mode": "緊急モード",
+  "crew_safety_critical": "クルー安全性重要",
+  "oxygen_level": "酸素レベル",
+  "co2_level": "CO2レベル",
+  "power_status": "電力状態",
+  "temperature": "温度",
+  "mission_day": "ミッション日",
+  "algorithm_performance": "アルゴリズム性能",
+  "resource_efficiency": "リソース効率",
+  "safety_compliance": "安全コンプライアンス",
+  "error_critical": "重大エラー",
+  "warning_attention": "注意が必要",
+  "info_normal": "通常運用",
+  "success_optimal": "最適性能"
 }

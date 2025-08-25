@@ -1,12 +1,18 @@
 {
-  "locale": "fr",
-  "name": "Français",
-  "region_preferences": [
-    "ca-central-1",
-    "eu-west-1"
-  ],
-  "compliance": [
-    "GDPR",
-    "PIPEDA"
-  ]
+  "system_status": "État du Système",
+  "algorithm_running": "Algorithme en Cours",
+  "emergency_mode": "Mode d'Urgence",
+  "crew_safety_critical": "Sécurité d'Équipage Critique",
+  "oxygen_level": "Niveau d'Oxygène",
+  "co2_level": "Niveau de CO2",
+  "power_status": "État de l'Alimentation",
+  "temperature": "Température",
+  "mission_day": "Jour de Mission",
+  "algorithm_performance": "Performance de l'Algorithme",
+  "resource_efficiency": "Efficacité des Ressources",
+  "safety_compliance": "Conformité Sécurité",
+  "error_critical": "Erreur Critique",
+  "warning_attention": "Attention Requise",
+  "info_normal": "Fonctionnement Normal",
+  "success_optimal": "Performance Optimale"
 }

@@ -1,0 +1,48 @@
+{
+  "timestamp": "2025-08-25 21:52:02",
+  "total_execution_time_seconds": 0.0008292198181152344,
+  "passed_suites": [
+    "\ud83e\udde0 Algorithm Structure Tests",
+    "\ud83d\udd17 Integration Logic Tests",
+    "\u26a1 Performance Logic Tests",
+    "\ud83d\udee1\ufe0f Safety Logic Tests"
+  ],
+  "failed_suites": [
+    "\ud83d\udcca Validation Logic Tests",
+    "\ud83d\ude80 Mission Scenario Logic"
+  ],
+  "detailed_results": {
+    "\ud83e\udde0 Algorithm Structure Tests": {
+      "success": true,
+      "tests_passed": 6,
+      "tests_total": 6
+    },
+    "\ud83d\udd17 Integration Logic Tests": {
+      "success": true,
+      "tests_passed": 4,
+      "tests_total": 4
+    },
+    "\u26a1 Performance Logic Tests": {
+      "success": true,
+      "tests_passed": 4,
+      "tests_total": 4
+    },
+    "\ud83d\udee1\ufe0f Safety Logic Tests": {
+      "success": true,
+      "tests_passed": 5,
+      "tests_total": 5
+    },
+    "\ud83d\udcca Validation Logic Tests": {
+      "success": false,
+      "tests_passed": 1,
+      "tests_total": 4
+    },
+    "\ud83d\ude80 Mission Scenario Logic": {
+      "success": false,
+      "tests_passed": 1,
+      "tests_total": 3
+    }
+  },
+  "overall_success": false,
+  "test_type": "lightweight_logic_validation"
+}

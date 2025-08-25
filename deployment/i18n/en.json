@@ -1,12 +1,18 @@
 {
-  "locale": "en",
-  "name": "English",
-  "region_preferences": [
-    "us-east-1",
-    "ca-central-1"
-  ],
-  "compliance": [
-    "SOC2",
-    "PCI-DSS"
-  ]
+  "system_status": "System Status",
+  "algorithm_running": "Algorithm Running",
+  "emergency_mode": "Emergency Mode",
+  "crew_safety_critical": "Crew Safety Critical",
+  "oxygen_level": "Oxygen Level",
+  "co2_level": "CO2 Level",
+  "power_status": "Power Status",
+  "temperature": "Temperature",
+  "mission_day": "Mission Day",
+  "algorithm_performance": "Algorithm Performance",
+  "resource_efficiency": "Resource Efficiency",
+  "safety_compliance": "Safety Compliance",
+  "error_critical": "Critical Error",
+  "warning_attention": "Attention Required",
+  "info_normal": "Normal Operation",
+  "success_optimal": "Optimal Performance"
 }
